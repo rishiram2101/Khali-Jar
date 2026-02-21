@@ -755,8 +755,16 @@ try {
         const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt.seconds*1000) : 0;
         return tb - ta;
       });
-      render();
-      setSyncStatus('synced','✓ Live — Firebase');
+      try {
+        showDebug('Calling render()...');
+        render();
+        showDebug('render() completed ✅');
+        setSyncStatus('synced','✓ Live — Firebase');
+      } catch(renderErr) {
+        showDebug('❌ render() CRASHED: ' + renderErr.message);
+        showDebug('Stack: ' + renderErr.stack.split('\n')[1]);
+        setSyncStatus('error','Render error');
+      }
     },
     err => {
       showDebug('❌ Snapshot error: ' + err.code + ' — ' + err.message);
