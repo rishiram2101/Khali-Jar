@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🫙 Khali Jar</title>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+/* ─── LIGHT THEME ─── */
+:root {
+  --bg: #f4f2ee; --card: #ffffff; --text: #1a1a1a; --muted: #888;
+  --border: #e2ddd6; --shadow: 0 2px 16px rgba(0,0,0,0.07);
+  --accent: #2d5a27; --accent-light: #e8f0e7; --theme: #2d5a27;
+  --gold: #d4a017; --rishi: #3b82f6; --shruti: #ec4899; --shared: #22c55e;
+  --radius: 14px;
+  --trend-up: #ef4444; --trend-down: #22c55e;
+}
+/* ─── DARK THEME ─── */
+[data-theme="dark"] {
+  --bg: #111827; --card: #1f2937; --text: #f9fafb; --muted: #9ca3af;
+  --border: #374151; --shadow: 0 2px 16px rgba(0,0,0,0.4);
+  --accent-light: rgba(255,255,255,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+/* SYNC BAR */
+.sync-bar { background: #1a3a17; color: rgba(255,255,255,0.8); font-size: 0.69rem; text-align: center; padding: 4px 10px; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 24px; transition: background 0.3s; }
+.sync-bar.saving { background: #78350f; } .sync-bar.error { background: #7f1d1d; }
+.sync-dot { width:6px; height:6px; border-radius:50%; background:#4ade80; flex-shrink:0; }
+.sync-dot.pulse { animation: pulse 1.2s infinite; background:#fbbf24; }
+.sync-dot.err { background:#f87171; animation:pulse 1.2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+/* HEADER */
+header { background: var(--theme); color: white; padding: 18px 18px 14px; position: sticky; top: 0; z-index: 50; transition: background 0.4s; }
+.header-top { display: flex; align-items: center; justify-content: space-between; }
+.header-title { flex: 1; text-align: center; }
+.header-title h1 { font-family: 'Tiro Devanagari Hindi', serif; font-size: 2.6rem; font-weight: 400; letter-spacing: 0.01em; line-height: 1; }
+.header-title p { font-size: 0.68rem; opacity: 0.75; margin-top: 4px; font-style: italic; }
+.header-logo { font-size: 2rem; line-height: 1; }
+.header-btn { background: rgba(255,255,255,0.18); border: none; color: white; border-radius: 8px; padding: 5px 10px; font-size: 0.72rem; cursor: pointer; font-family: inherit; font-weight: 600; transition: background 0.15s; flex-shrink: 0; }
+.header-btn:hover { background: rgba(255,255,255,0.32); }
+/* MONTH NAV — now lives below stats */
+.month-nav { display: flex; align-items: center; gap: 16px; justify-content: center; padding: 10px 0 4px; }
+.month-nav button { background: var(--card); border: 1.5px solid var(--border); color: var(--text); border-radius: 50%; width: 34px; height: 34px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); transition: all 0.15s; }
+.month-nav button:hover { border-color: var(--accent); color: var(--accent); }
+.month-nav span { font-size: 1rem; font-weight: 700; color: var(--text); min-width: 130px; text-align: center; }
+#monthLabel { font-size: 1rem; font-weight: 600; min-width: 140px; text-align: center; }
+
+/* BUDGET BANNER */
+.budget-banner { margin: 14px 14px 0; background: var(--card); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); display: none; }
+.budget-banner.visible { display: block; }
+.budget-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.budget-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+.budget-track { background: var(--border); border-radius: 6px; height: 10px; overflow: hidden; margin-bottom: 5px; }
+.budget-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
+.budget-fill.under { background: var(--accent); } .budget-fill.over { background: #ef4444; }
+.budget-pct { font-size: 0.72rem; color: var(--muted); text-align: right; }
+.c-under { color: var(--accent); } .c-over { color: #ef4444; }
+
+/* STATS */
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; padding: 14px 14px 0; }
+.stat-card { background: var(--card); border-radius: var(--radius); padding: 12px 10px; box-shadow: var(--shadow); position: relative; }
+.stat-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+.stat-value { font-size: 1.05rem; font-weight: 800; }
+.sv-total { color: var(--text); } .sv-rishi { color: var(--rishi); } .sv-shruti { color: var(--shruti); } .sv-shared { color: var(--shared); }
+.trophy-badge { position: absolute; top: 6px; right: 6px; font-size: 0.9rem; }
+
+/* INSIGHTS STRIP */
+.insights-strip { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 0; }
+.insight-card { background: var(--card); border-radius: var(--radius); padding: 11px 14px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px; font-size: 0.82rem; }
+.insight-icon { font-size: 1.2rem; flex-shrink: 0; }
+.insight-text { flex: 1; line-height: 1.4; }
+.insight-text strong { font-weight: 700; }
+.trend-up   { color: var(--trend-up); font-weight: 700; }
+.trend-down { color: var(--trend-down); font-weight: 700; }
+
+/* TABS */
+.tabs { display: flex; gap: 6px; padding: 12px 14px 0; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { padding: 7px 14px; border-radius: 30px; border: 1.5px solid var(--border); background: none; cursor: pointer; font-size: 0.8rem; font-family: inherit; color: var(--muted); transition: all 0.2s; font-weight: 500; white-space: nowrap; }
+.tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* MAIN */
+.main { padding: 12px 14px 100px; }
+
+/* CAT ROW */
+.cat-row { display: flex; gap: 7px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 2px; scrollbar-width: none; }
+.cat-row::-webkit-scrollbar { display: none; }
+.cat-btn { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--card); cursor: pointer; font-size: 0.75rem; font-family: inherit; white-space: nowrap; transition: all 0.15s; font-weight: 500; color: var(--text); }
+.cat-btn.active { background: var(--gold); border-color: var(--gold); color: white; }
+.cat-btn.add-tag { border-style: dashed; color: var(--muted); }
+
+/* VIEW PANELS */
+.view-panel { display: none; } .view-panel.active { display: block; }
+
+/* ENTRY CARDS */
+.entries-list { display: flex; flex-direction: column; gap: 9px; }
+.entry-card { background: var(--card); border-radius: var(--radius); padding: 13px 14px; box-shadow: var(--shadow); display: flex; align-items: flex-start; gap: 11px; animation: fadeIn 0.2s ease; cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; }
+.entry-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.12); transform: translateY(-1px); }
+
+/* SWIPE TO DELETE */
+.swipe-wrapper { position: relative; overflow: hidden; border-radius: var(--radius); margin-bottom: 0; }
+.swipe-delete-bg { position: absolute; right: 0; top: 0; bottom: 0; width: 72px; background: #ef4444; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem; border-radius: 0 var(--radius) var(--radius) 0; opacity: 0; transition: opacity 0.15s; }
+.swipe-wrapper.swiping .swipe-delete-bg { opacity: 1; }
+.swipe-wrapper .entry-card { position: relative; transition: transform 0.2s ease, box-shadow 0.15s; margin-bottom: 0; border-radius: var(--radius); }
+.swipe-wrapper.swiped .entry-card { transform: translateX(-72px); }
+@keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+.entry-emoji { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+.entry-info { flex: 1; min-width: 0; }
+.entry-desc { font-weight: 600; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.entry-meta { font-size: 0.71rem; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.entry-tag-pill { font-size: 0.65rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 1px 6px; color: var(--muted); }
+.edit-hint { font-size: 0.62rem; color: #ccc; }
+.entry-right { text-align: right; flex-shrink: 0; }
+.entry-amount { font-size: 1rem; font-weight: 800; }
+.who-badge { display: inline-block; font-size: 0.63rem; padding: 2px 8px; border-radius: 20px; color: white; margin-top: 3px; font-weight: 600; }
+.who-badge.rishi { background: var(--rishi); } .who-badge.shruti { background: var(--shruti); } .who-badge.shared { background: var(--shared); }
+
+/* REACTIONS */
+.reactions-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.reaction-btn { background: var(--bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 3px 8px; font-size: 0.78rem; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 3px; }
+.reaction-btn:hover { border-color: var(--accent); transform: scale(1.1); }
+.reaction-btn.mine { background: var(--accent-light); border-color: var(--accent); }
+.reaction-count { font-size: 0.68rem; font-weight: 700; color: var(--muted); }
+.add-reaction-btn { background: none; border: 1.5px dashed var(--border); border-radius: 20px; padding: 3px 8px; font-size: 0.78rem; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+.add-reaction-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* REACTION PICKER */
+.reaction-picker { position: fixed; z-index: 300; background: var(--card); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; max-width: 220px; }
+.reaction-pick-btn { font-size: 1.4rem; cursor: pointer; padding: 4px; border-radius: 8px; transition: transform 0.15s; border: none; background: none; }
+.reaction-pick-btn:hover { transform: scale(1.3); background: var(--bg); }
+
+/* WEEKLY BREAKDOWN */
+.weekly-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
+.week-rows { display: flex; flex-direction: column; gap: 8px; }
+.week-row { display: flex; align-items: center; gap: 10px; }
+.week-label { font-size: 0.75rem; font-weight: 600; width: 52px; flex-shrink: 0; color: var(--muted); }
+.week-track { flex: 1; background: var(--border); border-radius: 4px; height: 10px; overflow: hidden; }
+.week-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+.week-val { font-size: 0.75rem; font-weight: 700; width: 62px; text-align: right; }
+.week-row.peak .week-label { color: var(--accent); font-weight: 800; }
+.week-row.peak .week-fill { background: var(--accent) !important; }
+
+/* CHARTS */
+.chart-controls { background: var(--card); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.person-toggle { display: flex; gap: 6px; flex-wrap: wrap; }
+.person-pill { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: none; cursor: pointer; font-size: 0.78rem; font-family: inherit; font-weight: 600; transition: all 0.15s; color: var(--muted); }
+.person-pill.active-all    { background: var(--accent); border-color: var(--accent); color: white; }
+.person-pill.active-rishi  { background: var(--rishi);  border-color: var(--rishi);  color: white; }
+.person-pill.active-shruti { background: var(--shruti); border-color: var(--shruti); color: white; }
+.person-pill.active-shared { background: var(--shared); border-color: var(--shared); color: white; }
+.period-select { padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.78rem; font-family: inherit; background: var(--bg); color: var(--text); cursor: pointer; outline: none; font-weight: 600; }
+.chart-body { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.chart-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.chart-card-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 14px; }
+.vbar-wrap { display: flex; align-items: flex-end; gap: 6px; height: 140px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.vbar-wrap::-webkit-scrollbar { display: none; }
+.vbar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; min-width: 32px; }
+.vbar-val { font-size: 0.58rem; font-weight: 700; color: var(--text); text-align: center; white-space: nowrap; }
+.pie-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.pie-svg { width: 110px; height: 110px; flex-shrink: 0; }
+.pie-legend { width: 100%; display: flex; flex-direction: column; gap: 5px; }
+.pie-legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; }
+.pie-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.pie-legend-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pie-legend-pct { font-weight: 700; color: var(--text); }
+.who-chart-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
+.hbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.hbar-label { width: 55px; font-size: 0.78rem; font-weight: 600; flex-shrink: 0; color: var(--text); }
+.hbar-track { flex: 1; background: var(--border); border-radius: 4px; height: 10px; overflow: hidden; }
+.hbar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+.hbar-val { width: 70px; text-align: right; font-size: 0.78rem; font-weight: 700; }
+.multimonth-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
+.mm-bars-wrap { display: flex; align-items: flex-end; gap: 8px; height: 120px; overflow-x: auto; scrollbar-width: none; }
+.mm-col { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 40px; flex: 1; }
+.mm-bar-group { display: flex; align-items: flex-end; gap: 2px; width: 100%; }
+.mm-bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 3px; transition: height 0.4s; }
+.mm-col-label { font-size: 0.6rem; color: var(--muted); text-align: center; white-space: nowrap; }
+.mm-legend { display: flex; gap: 12px; margin-top: 8px; justify-content: center; }
+.mm-leg-item { display: flex; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--text); }
+.mm-leg-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+/* CALENDAR */
+.cal-section { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.cal-header-row { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; margin-bottom: 6px; }
+.cal-header-row span { font-size: 0.66rem; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+.cal-cells { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+.cal-cell { aspect-ratio:1; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.78rem; position:relative; color: var(--text); }
+.cal-cell.other { color: var(--border); }
+.cal-cell.today { background: var(--accent-light); font-weight:800; color:var(--accent); }
+.cal-cell.has-dot::after { content:''; position:absolute; bottom:3px; width:4px; height:4px; background:var(--gold); border-radius:50%; }
+
+/* FAB */
+.fab { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); background:var(--accent); color:white; border:none; border-radius:50%; width:66px; height:66px; font-size:1.8rem; cursor:pointer; box-shadow:0 6px 24px rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; z-index:100; transition:transform 0.15s, box-shadow 0.15s; }
+.fab:hover { transform:translateX(-50%) scale(1.08); box-shadow:0 8px 28px rgba(0,0,0,0.4); }
+.fab:active { transform:translateX(-50%) scale(0.95); }
+
+/* COIN BUTTON */
+.coin-fab { position:fixed; bottom:32px; right:22px; background:var(--card); border:2px solid var(--border); border-radius:50%; width:54px; height:54px; font-size:1.5rem; cursor:pointer; box-shadow:var(--shadow); display:flex; align-items:center; justify-content:center; z-index:100; transition:all 0.15s; }
+.coin-fab:hover { border-color:var(--accent); transform:scale(1.08); }
+.coin-fab:active { transform:scale(0.95); }
+
+/* COIN FLIP MODAL */
+.coin-modal { background:var(--card); border-radius:28px 28px 0 0; padding:32px 24px 40px; text-align:center; }
+.coin-scene { width:120px; height:120px; perspective:600px; margin:0 auto 28px; }
+.coin-inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; transition:transform 1.2s cubic-bezier(0.4,0,0.2,1); }
+.coin-inner.flipping { animation:coinSpin 1.2s cubic-bezier(0.4,0,0.2,1) forwards; }
+@keyframes coinSpin {
+  0%   { transform:rotateY(0deg); }
+  40%  { transform:rotateY(900deg) translateY(-40px); }
+  70%  { transform:rotateY(1440deg) translateY(-20px); }
+  100% { transform:rotateY(var(--coin-end)); }
+}
+.coin-face { position:absolute; width:100%; height:100%; border-radius:50%; backface-visibility:hidden; display:flex; align-items:center; justify-content:center; font-size:3rem; box-shadow:0 4px 20px rgba(0,0,0,0.2); }
+.coin-heads { background:linear-gradient(135deg,#f6d365,#fda085); transform:rotateY(0deg); }
+.coin-tails { background:linear-gradient(135deg,#c3cfe2,#e0e0e0); transform:rotateY(180deg); }
+.coin-result { font-size:1.6rem; font-weight:800; min-height:2rem; margin-bottom:8px; transition:opacity 0.3s; }
+.coin-verdict { font-size:0.9rem; color:var(--muted); min-height:1.4rem; margin-bottom:24px; }
+.coin-toss-btn { background:var(--accent); color:white; border:none; border-radius:16px; padding:14px 40px; font-size:1rem; font-weight:700; cursor:pointer; font-family:inherit; width:100%; transition:all 0.15s; }
+.coin-toss-btn:hover { opacity:0.9; transform:translateY(-1px); }
+.coin-toss-btn:active { transform:scale(0.97); }
+.coin-toss-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+/* MODALS */
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:200; display:flex; align-items:flex-end; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.25s; }
+.overlay.open { opacity:1; pointer-events:all; }
+.modal { background:var(--card); border-radius:22px 22px 0 0; padding:24px 20px 36px; width:100%; max-width:500px; transform:translateY(100%); transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1); max-height:92vh; overflow-y:auto; }
+.overlay.open .modal { transform:translateY(0); }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.modal-header h2 { font-size:1.2rem; font-weight:800; color:var(--text); }
+.mode-badge { font-size:0.72rem; padding:3px 10px; border-radius:20px; font-weight:700; }
+.mode-badge.editing  { background:var(--accent-light); color:var(--accent); }
+.mode-badge.adding   { background:#fef3c7; color:#92400e; }
+.mode-badge.settings { background:#ede9fe; color:#6d28d9; }
+.mode-badge.newtag   { background:#fce7f3; color:#be185d; }
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:0.71rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:5px; }
+.form-group input, .form-group select { width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:10px; font-size:0.93rem; font-family:inherit; background:var(--bg); color:var(--text); outline:none; transition:border-color 0.2s; }
+.form-group input:focus, .form-group select:focus { border-color:var(--accent); }
+.who-opts { display:flex; gap:8px; }
+.who-opt { flex:1; padding:10px 6px; border:1.5px solid var(--border); border-radius:10px; text-align:center; cursor:pointer; font-size:0.82rem; font-weight:600; font-family:inherit; background:var(--bg); color:var(--text); transition:all 0.15s; }
+.who-opt.sel-rishi  { background:var(--rishi);  border-color:var(--rishi);  color:white; }
+.who-opt.sel-shruti { background:var(--shruti); border-color:var(--shruti); color:white; }
+.who-opt.sel-shared { background:var(--shared); border-color:var(--shared); color:white; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.tag-picker { display:flex; flex-wrap:wrap; gap:8px; }
+.tag-opt { padding:7px 13px; border-radius:20px; border:1.5px solid var(--border); background:var(--bg); cursor:pointer; font-size:0.8rem; font-family:inherit; font-weight:500; transition:all 0.15s; color:var(--text); }
+.tag-opt.selected { background:var(--accent); border-color:var(--accent); color:white; }
+.tag-opt.add-new { border-style:dashed; color:var(--muted); }
+.btn-submit { width:100%; padding:14px; background:var(--accent); color:white; border:none; border-radius:12px; font-size:0.97rem; font-weight:700; font-family:inherit; cursor:pointer; margin-top:6px; transition:background 0.15s; }
+.btn-submit.editing { background:#1d4ed8; }
+.btn-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; }
+.btn-delete { padding:12px; background:#fef2f2; color:#ef4444; border:1.5px solid #fecaca; border-radius:12px; font-size:0.9rem; font-weight:700; font-family:inherit; cursor:pointer; }
+.btn-close { padding:10px; background:none; color:var(--muted); border:none; font-size:0.88rem; font-family:inherit; cursor:pointer; margin-top:2px; width:100%; }
+.setting-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border); }
+.setting-row:last-child { border-bottom:none; }
+.setting-label { font-size:0.9rem; font-weight:600; color:var(--text); }
+.setting-sub { font-size:0.75rem; color:var(--muted); margin-top:2px; }
+.setting-input { width:130px; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:0.93rem; font-family:inherit; background:var(--bg); color:var(--text); outline:none; text-align:right; }
+.tag-icon-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-top:6px; }
+.icon-opt { aspect-ratio:1; border-radius:10px; border:1.5px solid var(--border); background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:1.2rem; cursor:pointer; transition:all 0.15s; }
+.icon-opt.selected { border-color:var(--accent); background:var(--accent-light); }
+
+/* DARK MODE TOGGLE */
+.dark-toggle { display:flex; align-items:center; gap:10px; }
+.toggle-track { width:44px; height:24px; background:var(--border); border-radius:12px; cursor:pointer; position:relative; transition:background 0.3s; flex-shrink:0; }
+.toggle-track.on { background:var(--accent); }
+.toggle-thumb { width:18px; height:18px; background:white; border-radius:50%; position:absolute; top:3px; left:3px; transition:transform 0.3s; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+.toggle-track.on .toggle-thumb { transform:translateX(20px); }
+
+.empty-state { text-align:center; padding:50px 20px; color:var(--muted); }
+.empty-state .e-icon { font-size:2.8rem; margin-bottom:10px; }
+
+/* QUICK ADD */
+.quick-add-row { display:flex; gap:8px; overflow-x:auto; margin-bottom:12px; padding-bottom:2px; scrollbar-width:none; }
+.quick-add-row::-webkit-scrollbar { display:none; }
+.quick-add-chip { display:flex; align-items:center; gap:6px; padding:8px 14px; background:var(--card); border:1.5px solid var(--border); border-radius:30px; cursor:pointer; font-size:0.8rem; font-family:inherit; font-weight:600; color:var(--text); white-space:nowrap; box-shadow:var(--shadow); transition:all 0.15s; flex-shrink:0; }
+.quick-add-chip:hover { border-color:var(--accent); color:var(--accent); transform:translateY(-1px); }
+.quick-add-chip:active { transform:scale(0.96); }
+.quick-add-chip .chip-icon { font-size:1rem; }
+.quick-add-chip .chip-amt { font-size:0.7rem; color:var(--muted); font-weight:500; }
+.qa-edit-btn { padding:8px 10px; background:none; border:1.5px dashed var(--border); border-radius:30px; cursor:pointer; font-size:0.75rem; color:var(--muted); font-family:inherit; white-space:nowrap; flex-shrink:0; transition:all 0.15s; }
+.qa-edit-btn:hover { border-color:var(--accent); color:var(--accent); }
+@media (max-width:400px) { .stats{grid-template-columns:repeat(2,1fr);} .chart-body{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="sync-bar" id="syncBar">
+  <span class="sync-dot pulse" id="syncDot"></span>
+  <span id="syncMsg">Connecting…</span>
+</div>
+<div id="demoBanner" style="display:none;background:#7c3aed;color:white;text-align:center;padding:6px 12px;font-size:0.75rem;font-weight:700;letter-spacing:0.05em;">
+  🧪 DEMO MODE — Fake data, nothing is real or saved
+</div>
+
+<header>
+  <div class="header-top">
+    <button class="header-btn" style="opacity:0;pointer-events:none;">⚙</button>
+    <div class="header-title">
+      <div class="header-logo">🫙✨</div>
+      <h1>Khali Jar</h1>
+      <p>tracking where it all went 💸</p>
+    </div>
+    <button class="header-btn" id="settingsBtn">⚙ Settings</button>
+  </div>
+</header>
+
+<div class="budget-banner" id="budgetBanner">
+  <div class="budget-top">
+    <div class="budget-label">Monthly Budget</div>
+    <div style="font-size:0.85rem;font-weight:700;">
+      <span id="budgetSpent" class="c-under">$0</span>
+      <span style="color:var(--muted);"> of </span>
+      <span id="budgetTotal" style="color:var(--muted);">$0</span>
+    </div>
+  </div>
+  <div class="budget-track"><div class="budget-fill under" id="budgetFill" style="width:0%"></div></div>
+  <div class="budget-pct" id="budgetPct"></div>
+</div>
+
+<div class="stats">
+  <div class="stat-card"><div class="stat-label">Total Spent</div><div class="stat-value sv-total" id="statTotal">$0</div></div>
+  <div class="stat-card" style="position:relative;"><div class="stat-label" id="labelRishi">Rishi</div><div class="stat-value sv-rishi" id="whoRishi">$0</div><span class="trophy-badge" id="trophyRishi"></span></div>
+  <div class="stat-card" style="position:relative;"><div class="stat-label" id="labelShruti">Shruti</div><div class="stat-value sv-shruti" id="whoShruti">$0</div><span class="trophy-badge" id="trophyShruti"></span></div>
+  <div class="stat-card"><div class="stat-label">Shared</div><div class="stat-value sv-shared" id="whoShared">$0</div></div>
+</div>
+
+<!-- MONTH NAV — below stats -->
+<div class="month-nav">
+  <button onclick="changeMonth(-1)">‹</button>
+  <span id="monthLabel"></span>
+  <button onclick="changeMonth(1)">›</button>
+</div>
+
+<!-- INSIGHTS STRIP -->
+<div class="insights-strip" id="insightsStrip"></div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('entries',this)">📋 Entries</button>
+  <button class="tab" onclick="switchTab('chart',this)">📊 Charts</button>
+  <button class="tab" onclick="switchTab('weekly',this)">📆 Weekly</button>
+  <button class="tab" onclick="switchTab('calendar',this)">📅 Calendar</button>
+</div>
+
+<div class="main">
+
+  <!-- ENTRIES -->
+  <div id="view-entries" class="view-panel active">
+    <div class="cat-row" id="catRow"></div>
+    <!-- QUICK ADD -->
+    <div class="quick-add-row" id="quickAddRow"></div>
+    <div class="entries-list" id="entriesList"></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div id="view-chart" class="view-panel">
+    <div class="chart-controls">
+      <div class="person-toggle" id="personToggle">
+        <button class="person-pill active-all" onclick="setChartPerson('all',this)">All</button>
+        <button class="person-pill" onclick="setChartPerson('rishi',this)">Rishi</button>
+        <button class="person-pill" onclick="setChartPerson('shruti',this)">Shruti</button>
+        <button class="person-pill" onclick="setChartPerson('shared',this)">Shared</button>
+      </div>
+      <select class="period-select" id="periodSelect" onchange="renderChart()">
+        <option value="mtd">Month to Date</option>
+        <option value="ytd">Year to Date</option>
+        <option value="m2m">Month vs Month</option>
+        <option value="yoy">Year over Year</option>
+      </select>
+    </div>
+    <div class="chart-body">
+      <div class="chart-card">
+        <div class="chart-card-title" id="barChartTitle">Spend by Person</div>
+        <div style="position:relative;">
+          <div style="display:flex;flex-direction:column;justify-content:space-between;height:140px;position:absolute;left:0;top:0;padding-right:4px;">
+            <span id="yAxisTop" style="font-size:0.58rem;color:var(--muted);"></span>
+            <span id="yAxisMid" style="font-size:0.58rem;color:var(--muted);"></span>
+            <span style="font-size:0.58rem;color:var(--muted);">$0</span>
+          </div>
+          <div class="vbar-wrap" id="vbarWrap" style="padding-left:28px;"></div>
+        </div>
+        <div id="tagLegend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Tag Breakdown</div>
+        <div class="pie-wrap">
+          <svg class="pie-svg" id="pieSvg" viewBox="0 0 100 100"></svg>
+          <div class="pie-legend" id="pieLegend"></div>
+        </div>
+      </div>
+    </div>
+    <div class="who-chart-card" id="whoChartCard">
+      <div class="chart-card-title">Spend by Month-Year</div>
+      <div id="whoChartBars"></div>
+    </div>
+    <div class="multimonth-card" id="multimonthCard" style="display:none;">
+      <div class="chart-card-title" id="multimonthTitle">Month vs Month</div>
+      <div class="mm-bars-wrap" id="mmBarsWrap"></div>
+      <div class="mm-legend" id="mmLegend"></div>
+    </div>
+  </div>
+
+  <!-- WEEKLY -->
+  <div id="view-weekly" class="view-panel">
+    <div class="weekly-card">
+      <div class="chart-card-title" id="weeklyTitle">Weekly Breakdown</div>
+      <div class="week-rows" id="weekRows"></div>
+    </div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div id="view-calendar" class="view-panel">
+    <div class="cal-section">
+      <div class="cal-header-row">
+        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+      </div>
+      <div class="cal-cells" id="calCells"></div>
+    </div>
+  </div>
+
+</div>
+
+<button class="fab" id="fabBtn">＋</button>
+<button class="coin-fab" id="coinFabBtn">🪙</button>
+
+<!-- COIN FLIP MODAL -->
+<div class="overlay" id="coinOverlay">
+  <div class="coin-modal">
+    <div class="modal-header" style="margin-bottom:20px;">
+      <h2>To Buy or Not to Buy?</h2>
+      <span class="mode-badge" style="background:#fef9c3;color:#854d0e;">🪙 FATE</span>
+    </div>
+    <div class="coin-scene">
+      <div class="coin-inner" id="coinInner">
+        <div class="coin-face coin-heads">🤑</div>
+        <div class="coin-face coin-tails">🙅</div>
+      </div>
+    </div>
+    <div class="coin-result" id="coinResult">—</div>
+    <div class="coin-verdict" id="coinVerdict">Tap below to let fate decide</div>
+    <button class="coin-toss-btn" id="coinTossBtn">🪙 Toss!</button>
+    <button class="btn-close" onclick="document.getElementById('coinOverlay').classList.remove('open')" style="margin-top:10px;">Close</button>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Entry</h2>
+      <span class="mode-badge adding" id="modeBadge">NEW</span>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" id="fDesc" placeholder="e.g. Groceries, Netflix…" autocomplete="off"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <input type="number" id="fAmount" placeholder="0.00" min="0" step="0.01"/>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="fDate"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Who</label>
+      <div class="who-opts">
+        <button class="who-opt sel-shared" id="optShared" onclick="selectWho('shared')">Shared</button>
+        <button class="who-opt" id="optRishi" onclick="selectWho('rishi')">Rishi</button>
+        <button class="who-opt" id="optShruti" onclick="selectWho('shruti')">Shruti</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tag</label>
+      <div class="tag-picker" id="tagPicker"></div>
+    </div>
+    <div class="form-group">
+      <label>Note <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aaa;font-size:0.68rem;">(optional)</span></label>
+      <input type="text" id="fNote" placeholder="Any extra details…" autocomplete="off"/>
+    </div>
+    <button class="btn-submit" id="submitBtn">Add Entry</button>
+    <div class="btn-row" id="editBtnRow" style="display:none;">
+      <button class="btn-delete" id="deleteBtn">🗑 Delete</button>
+      <button class="btn-close" onclick="closeModal()" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;">Cancel</button>
+    </div>
+    <button class="btn-close" id="cancelBtn" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Settings</h2>
+      <span class="mode-badge settings">⚙</span>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Monthly Budget</div><div class="setting-sub">Set a spending target</div></div>
+      <input class="setting-input" type="number" id="budgetInput" placeholder="e.g. 3000" min="0" step="50"/>
+    </div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+      <div><div class="setting-label">🔁 Recurring Bills</div><div class="setting-sub">Auto-added on the 1st of every month</div></div>
+      <div id="recurringList" style="width:100%;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Dark Mode</div><div class="setting-sub">Easy on the eyes at night</div></div>
+      <div class="dark-toggle">
+        <span style="font-size:0.8rem;color:var(--muted);" id="darkLabel">Off</span>
+        <div class="toggle-track" id="darkToggle" onclick="toggleDark()">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+    </div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+      <div><div class="setting-label">App Color</div><div class="setting-sub">Pick a header theme</div></div>
+      <div id="colorPicker" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+    </div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+      <div><div class="setting-label">Quick Add Bills</div><div class="setting-sub">One-tap recurring expenses</div></div>
+      <div id="quickAddList" style="width:100%;display:flex;flex-direction:column;gap:8px;"></div>
+      <button id="addQuickItemBtn" style="background:none;border:1.5px dashed var(--border);border-radius:10px;padding:8px 14px;font-size:0.8rem;cursor:pointer;color:var(--muted);font-family:inherit;width:100%;">＋ Add Quick Item</button>
+    </div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+      <div><div class="setting-label">Manage Tags</div><div class="setting-sub">Tap ✕ to delete a custom tag</div></div>
+      <div id="manageTagsList" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;"></div>
+    </div>
+    <button class="btn-submit" onclick="saveSettings()" style="margin-top:8px;">Save Settings</button>
+    <button class="btn-close" onclick="closeSettings()">Close</button>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div class="setting-label">🧪 Demo Mode</div>
+          <div class="setting-sub">Show fake data — safe to share your screen</div>
+        </div>
+        <div class="dark-toggle">
+          <span style="font-size:0.8rem;color:var(--muted);" id="demoLabel">Off</span>
+          <div class="toggle-track" id="demoToggle" onclick="toggleDemo()">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW TAG MODAL -->
+<div class="overlay" id="newTagOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>New Tag</h2>
+      <span class="mode-badge newtag">TAG</span>
+    </div>
+    <div class="form-group">
+      <label>Tag Name</label>
+      <input type="text" id="newTagName" placeholder="e.g. Petrol, School, Gym…" autocomplete="off" maxlength="20"/>
+    </div>
+    <div class="form-group">
+      <label>Pick an Icon</label>
+      <div class="tag-icon-grid" id="iconGrid"></div>
+    </div>
+    <button class="btn-submit" onclick="saveNewTag()">Create Tag</button>
+    <button class="btn-close" onclick="closeNewTag()">Cancel</button>
+  </div>
+</div>
+
+<!-- REACTION PICKER (floating) -->
+<div class="reaction-picker" id="reactionPicker" style="display:none;"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp }    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+         onSnapshot, serverTimestamp, query,
+         getDoc, setDoc }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyA2NOlWfjqiNYBr3zoLnvioC1bn1McoG14",
+  authDomain:        "rishi-bills-project.firebaseapp.com",
+  projectId:         "rishi-bills-project",
+  storageBucket:     "rishi-bills-project.firebasestorage.app",
+  messagingSenderId: "650811092080",
+  appId:             "1:650811092080:web:57fb2de8d87cb30db418b5",
+  measurementId:     "G-ZQYLJHTV1N"
+};
+
+const app         = initializeApp(firebaseConfig);
+const db          = getFirestore(app);
+const entriesCol  = collection(db,'entries');
+const settingsDoc = doc(db,'settings','main');
+
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const DEFAULT_TAGS = [
+  {id:'dining',label:'Dining',icon:'🍽'},{id:'travel',label:'Travel',icon:'✈️'},
+  {id:'entertainment',label:'Entertainment',icon:'🎬'},{id:'bills',label:'Bills',icon:'🧾'},
+  {id:'subscriptions',label:'Subscriptions',icon:'🔁'},{id:'other',label:'Other',icon:'📌'},
+];
+const AVAILABLE_ICONS = ['📌','📄','🗂','💡','🏷','🔖','📎','🛒','🏠','🚗','💊','🎓','🐾','🌿','👶','💪','🍔','☕','🎁','🔧','💰','🏋','🎯','🛠','📱'];
+const PIE_COLORS = ['#f97316','#8b5cf6','#ec4899','#ef4444','#3b82f6','#6b7280','#14b8a6','#f59e0b','#84cc16','#06b6d4','#a855f7','#d97706'];
+const REACTION_EMOJIS = ['😱','😂','🤦','💸','🙄','👀','😬','🔥','💀','🥲','👏','❤️'];
+const THEME_COLORS = [
+  {name:'Forest Green',value:'#2d5a27'},{name:'Ocean Blue',value:'#1d4ed8'},
+  {name:'Sky Blue',value:'#0284c7'},{name:'Teal',value:'#0f766e'},
+  {name:'Purple',value:'#7c3aed'},{name:'Deep Red',value:'#b91c1c'},
+  {name:'Crimson',value:'#dc2626'},{name:'Rose',value:'#be185d'},
+  {name:'Slate',value:'#334155'},{name:'Charcoal',value:'#1f2937'},
+  {name:'Amber',value:'#b45309'},{name:'Indigo',value:'#4338ca'},
+];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let entries      = [];
+let customTags   = [];
+let budget       = 0;
+let themeColor   = '#2d5a27';
+let darkMode     = false;
+let currentMonth = new Date().getMonth();
+let currentYear  = new Date().getFullYear();
+let activeCategory = 'all';
+let selectedWho    = 'shared';
+let selectedTagId  = 'dining';
+let editingId      = null;
+let selectedIcon   = '📌';
+let chartPerson    = 'all';
+let reactionTargetId = null;
+
+let demoMode = false;
+let realEntries = []; // store real entries while in demo mode
+
+// ─── DEMO DATA ────────────────────────────────────────────────────────────────
+function generateDemoEntries() {
+  const now = new Date();
+  const m = now.getMonth(), y = now.getFullYear();
+  const prevM = m === 0 ? 11 : m-1, prevY = m === 0 ? y-1 : y;
+  const fakeDescs = {
+    dining:        ['Dinner at Masala House','Lunch at Subway','Brunch with friends','Pizza night','Sushi takeout','Café breakfast','Biryani order'],
+    travel:        ['Uber to airport','Petrol fill-up','Train tickets','Cab ride downtown','Parking fee'],
+    entertainment: ['Netflix subscription','Movie tickets','Concert tickets','Bowling night','Mini golf'],
+    bills:         ['Rent','Electricity','Internet','Phone bill','Water bill'],
+    subscriptions: ['Spotify','iCloud storage','Amazon Prime','Gym membership'],
+    other:         ['Pharmacy','Birthday gift','Household supplies','Stationery'],
+  };
+  const people = ['rishi','shruti','shared'];
+  const entries = [];
+  let id = 1;
+  // Generate ~30 entries spread over current + previous month
+  [[m,y,22],[prevM,prevY,15]].forEach(([mo,yr,count])=>{
+    const daysInMonth = new Date(yr,mo+1,0).getDate();
+    for(let i=0;i<count;i++){
+      const cat = Object.keys(fakeDescs)[Math.floor(Math.random()*Object.keys(fakeDescs).length)];
+      const descs = fakeDescs[cat];
+      const desc = descs[Math.floor(Math.random()*descs.length)];
+      const amount = Math.round((20 + Math.random()*280)*100)/100;
+      const day = String(1+Math.floor(Math.random()*daysInMonth)).padStart(2,'0');
+      const date = `${yr}-${String(mo+1).padStart(2,'0')}-${day}`;
+      const who = people[Math.floor(Math.random()*people.length)];
+      entries.push({_id:`demo_${id++}`,desc,amount,cat,who,date,note:'',reactions:{}});
+    }
+  });
+  return entries.sort((a,b)=>b.date.localeCompare(a.date));
+}
+
+window.toggleDemo = () => {
+  demoMode = !demoMode;
+  const toggle = document.getElementById('demoToggle');
+  const label  = document.getElementById('demoLabel');
+  const banner = document.getElementById('demoBanner');
+  toggle.className = 'toggle-track' + (demoMode ? ' on' : '');
+  label.textContent = demoMode ? 'On' : 'Off';
+  banner.style.display = demoMode ? 'block' : 'none';
+  if (demoMode) {
+    realEntries = entries;           // stash real data
+    entries = generateDemoEntries(); // load fake data
+  } else {
+    entries = realEntries;           // restore real data
+    realEntries = [];
+  }
+  render();
+};
+function tagById(id) { return allTags().find(t=>t.id===id)||{label:id,icon:'📌'}; }
+
+// ─── SYNC STATUS ──────────────────────────────────────────────────────────────
+function setSyncStatus(state,msg) {
+  const bar=document.getElementById('syncBar'), dot=document.getElementById('syncDot'), text=document.getElementById('syncMsg');
+  bar.className='sync-bar'+(state==='error'?' error':state==='saving'?' saving':'');
+  dot.className='sync-dot'+(state==='synced'?'':state==='error'?' err':' pulse');
+  text.textContent=msg;
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────────────────────
+async function loadSettings() {
+  try {
+    const snap=await getDoc(settingsDoc);
+    if(snap.exists()){
+      const d=snap.data();
+      budget=d.budget||0; customTags=d.customTags||[];
+      themeColor=d.themeColor||'#2d5a27'; darkMode=d.darkMode||false;
+      if(d.quickItems&&d.quickItems.length) quickItems=d.quickItems;
+      if(d.recurringBills&&d.recurringBills.length) recurringBills=d.recurringBills;
+    }
+  } catch(e){}
+  applyTheme(themeColor); applyDark(darkMode);
+  renderCatRow(); renderQuickAddRow();
+  autoAddRecurringBills();
+}
+async function saveSettingsToFirebase() {
+  try { await setDoc(settingsDoc,{budget,customTags,themeColor,darkMode,quickItems,recurringBills}); } catch(e){}
+}
+function applyTheme(color) {
+  document.documentElement.style.setProperty('--theme',color);
+  document.documentElement.style.setProperty('--accent',color);
+  document.documentElement.style.setProperty('--accent-light',color+'22');
+}
+function applyDark(on) {
+  document.documentElement.setAttribute('data-theme',on?'dark':'light');
+  const t=document.getElementById('darkToggle');
+  if(t){t.className='toggle-track'+(on?' on':''); document.getElementById('darkLabel').textContent=on?'On':'Off';}
+}
+window.toggleDark = ()=>{
+  darkMode=!darkMode; applyDark(darkMode);
+};
+
+// ─── LIVE LISTENER ────────────────────────────────────────────────────────────
+const q=query(entriesCol);
+onSnapshot(q,
+  snap=>{
+    entries=snap.docs.map(d=>({_id:d.id,...d.data()}));
+    // sort client-side — newest first, handles missing createdAt gracefully
+    entries.sort((a,b)=>{
+      const ta=a.createdAt?.seconds||0;
+      const tb=b.createdAt?.seconds||0;
+      return tb-ta;
+    });
+    render(); setSyncStatus('synced','✓ Live — Firebase');
+  },
+  err=>{console.error('Snapshot error:',err); setSyncStatus('error','Sync error — '+err.code);}
+);
+loadSettings();
+
+// ─── MONTH NAV ────────────────────────────────────────────────────────────────
+window.changeMonth=dir=>{
+  currentMonth+=dir;
+  if(currentMonth>11){currentMonth=0;currentYear++;}
+  if(currentMonth<0){currentMonth=11;currentYear--;}
+  render();
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function monthEntries(m,y){
+  const mm=m!==undefined?m:currentMonth, yy=y!==undefined?y:currentYear;
+  return entries.filter(e=>{const d=new Date(e.date+'T00:00:00');return d.getMonth()===mm&&d.getFullYear()===yy;});
+}
+function ytdEntries(y){
+  const yy=y!==undefined?y:currentYear;
+  return entries.filter(e=>new Date(e.date+'T00:00:00').getFullYear()===yy);
+}
+function filterByPerson(arr){return chartPerson==='all'?arr:arr.filter(e=>e.who===chartPerson);}
+function fmt(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtShort(n){return n>=1000?'$'+(n/1000).toFixed(1)+'k':'$'+Math.round(n);}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render(){
+  document.getElementById('monthLabel').textContent=MONTHS[currentMonth]+' '+currentYear;
+  const me=monthEntries(), total=me.reduce((s,e)=>s+e.amount,0);
+  const rishiAmt=me.filter(e=>e.who==='rishi').reduce((s,e)=>s+e.amount,0);
+  const shrutiAmt=me.filter(e=>e.who==='shruti').reduce((s,e)=>s+e.amount,0);
+  const sharedAmt=me.filter(e=>e.who==='shared').reduce((s,e)=>s+e.amount,0);
+
+  document.getElementById('statTotal').textContent=fmt(total);
+  document.getElementById('whoRishi').textContent=fmt(rishiAmt);
+  document.getElementById('whoShruti').textContent=fmt(shrutiAmt);
+  document.getElementById('whoShared').textContent=fmt(sharedAmt);
+
+  // TOTAL color based on budget
+  document.getElementById('statTotal').className=budget>0?'stat-value '+(total>budget?'c-over':'c-under'):'stat-value sv-total';
+
+  // CROWN 👑 next to bigger spender's name
+  const lR=document.getElementById('labelRishi'), lS=document.getElementById('labelShruti');
+  const tR=document.getElementById('trophyRishi'), tS=document.getElementById('trophyShruti');
+  tR.textContent=''; tS.textContent='';
+  if(rishiAmt>0||shrutiAmt>0){
+    if(rishiAmt>shrutiAmt){ lR.textContent='👑 Rishi'; lS.textContent='Shruti'; }
+    else if(shrutiAmt>rishiAmt){ lS.textContent='👑 Shruti'; lR.textContent='Rishi'; }
+    else { lR.textContent='Rishi'; lS.textContent='Shruti'; }
+  } else { lR.textContent='Rishi'; lS.textContent='Shruti'; }
+
+  renderBudget(total);
+  renderInsights(me);
+  renderEntries();
+  if(document.getElementById('view-chart').classList.contains('active')) renderChart();
+  if(document.getElementById('view-weekly').classList.contains('active')) renderWeekly();
+}
+
+// ─── BUDGET ───────────────────────────────────────────────────────────────────
+function renderBudget(total){
+  const banner=document.getElementById('budgetBanner');
+  if(!budget||budget<=0){banner.classList.remove('visible');return;}
+  banner.classList.add('visible');
+  const pct=Math.min((total/budget)*100,100), over=total>budget;
+  document.getElementById('budgetSpent').textContent=fmt(total);
+  document.getElementById('budgetSpent').className=over?'c-over':'c-under';
+  document.getElementById('budgetTotal').textContent=fmt(budget);
+  document.getElementById('budgetFill').style.width=pct.toFixed(1)+'%';
+  document.getElementById('budgetFill').className='budget-fill '+(over?'over':'under');
+  document.getElementById('budgetPct').textContent=over
+    ?`⚠️ ${fmt(total-budget)} over budget`:`${pct.toFixed(0)}% used — ${fmt(budget-total)} remaining`;
+}
+
+// ─── INSIGHTS ─────────────────────────────────────────────────────────────────
+function renderInsights(me){
+  const strip=document.getElementById('insightsStrip');
+  const insights=[];
+
+  // 1. SPENDING TRENDS — compare each tag this month vs last month (skip recurring bills)
+  const SKIP_TRENDS = ['rent','electricity','internet','phone','wifi'];
+  let prevM=currentMonth-1, prevY=currentYear;
+  if(prevM<0){prevM=11;prevY--;}
+  const prev=monthEntries(prevM,prevY);
+
+  const allTagIds=[...new Set([...me,...prev].map(e=>e.cat))];
+  allTagIds.forEach(cat=>{
+    if(SKIP_TRENDS.includes(tagById(cat).label.toLowerCase())) return;
+    const curAmt=me.filter(e=>e.cat===cat).reduce((s,e)=>s+e.amount,0);
+    const preAmt=prev.filter(e=>e.cat===cat).reduce((s,e)=>s+e.amount,0);
+    if(preAmt>0&&curAmt>0){
+      const pct=Math.round(((curAmt-preAmt)/preAmt)*100);
+      const tag=tagById(cat);
+      if(Math.abs(pct)>=15){
+        const up=pct>0;
+        insights.push({icon:tag.icon, html:`<strong>${tag.label}:</strong> <span class="${up?'trend-up':'trend-down'}">${up?'▲':'▼'} ${Math.abs(pct)}% ${up?'more':'less'}</span> than last month`});
+      }
+    }
+  });
+
+  // 2. TAG OF THE MONTH (skip rent tag)
+  const tagTotals={};
+  me.forEach(e=>{
+    if(tagById(e.cat).label.toLowerCase()==='rent') return;
+    tagTotals[e.cat]=(tagTotals[e.cat]||0)+e.amount;
+  });
+  const topTagEntries=Object.entries(tagTotals).sort((a,b)=>b[1]-a[1]);
+  if(topTagEntries.length>0){
+    const [topCat,topAmt]=topTagEntries[0];
+    const topTag=tagById(topCat);
+    const totalExRent=me.filter(e=>tagById(e.cat).label.toLowerCase()!=='rent').reduce((s,e)=>s+e.amount,0);
+    const pct=totalExRent>0?Math.round((topAmt/totalExRent)*100):0;
+    insights.push({icon:topTag.icon, html:`<strong>${topTag.label}</strong> is your top category this month — <span class="trend-up">${pct}%</span> of spend at <strong>${fmt(topAmt)}</strong> 👀`});
+  }
+
+  // 3. BIGGEST SPLURGE
+  if(me.length>0){
+    const biggest=me.reduce((a,b)=>a.amount>b.amount?a:b);
+    insights.push({icon:'💸',html:`Biggest splurge this month: <strong>${biggest.desc}</strong> at <strong>${fmt(biggest.amount)}</strong>`});
+  }
+
+  if(!insights.length){strip.innerHTML='';return;}
+  strip.innerHTML=insights.slice(0,3).map(i=>`
+    <div class="insight-card">
+      <div class="insight-icon">${i.icon}</div>
+      <div class="insight-text">${i.html}</div>
+    </div>`).join('');
+}
+
+// ─── CAT ROW ─────────────────────────────────────────────────────────────────
+function renderCatRow(){
+  const row=document.getElementById('catRow');
+  let html=`<button class="cat-btn${activeCategory==='all'?' active':''}" onclick="filterCat('all',this)">All</button>`;
+  allTags().forEach(t=>{
+    html+=`<button class="cat-btn${activeCategory===t.id?' active':''}" onclick="filterCat('${t.id}',this)">${t.icon} ${t.label}</button>`;
+  });
+  html+=`<button class="cat-btn add-tag" onclick="openNewTag()">＋ Tag</button>`;
+  row.innerHTML=html;
+}
+
+// ─── ENTRIES ─────────────────────────────────────────────────────────────────
+function renderEntries(){
+  const me=monthEntries();
+  const filtered=activeCategory==='all'?me:me.filter(e=>e.cat===activeCategory);
+  const list=document.getElementById('entriesList');
+  if(!filtered.length){
+    list.innerHTML='<div class="empty-state"><div class="e-icon">🫙</div><p>Nothing here yet.<br>Tap ＋ to add an expense!</p></div>';
+    return;
+  }
+  const sorted=[...filtered].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  list.innerHTML = '<div style="display:flex;flex-direction:column;gap:9px;">'+sorted.map(e=>{
+    const d=new Date(e.date+'T00:00:00');
+    const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const tag=tagById(e.cat);
+    const reactions=e.reactions||{};
+    const reactionHTML=Object.entries(reactions).map(([emoji,count])=>
+      `<button class="reaction-btn" onclick="event.stopPropagation();toggleReaction('${e._id}','${emoji}')">${emoji} <span class="reaction-count">${count}</span></button>`
+    ).join('');
+    return `<div class="swipe-wrapper" data-id="${e._id}">
+      <div class="swipe-delete-bg">🗑️</div>
+      <div class="entry-card" onclick="window.__editEntry('${e._id}')">
+        <div class="entry-emoji">${tag.icon}</div>
+        <div class="entry-info">
+          <div class="entry-desc">${e.desc.replace(/</g,'&lt;')}</div>
+          <div class="entry-meta">
+            <span>${ds}</span>
+            <span class="entry-tag-pill">${tag.label}</span>
+            <span class="edit-hint">tap to edit</span>
+          </div>
+          ${e.note?`<div style="font-size:0.72rem;color:var(--muted);margin-top:3px;font-style:italic;">💬 ${e.note.replace(/</g,'&lt;')}</div>`:''}
+          <div class="reactions-row">
+            ${reactionHTML}
+            <button class="add-reaction-btn" onclick="event.stopPropagation();openReactionPicker('${e._id}',this)">＋ 😄</button>
+          </div>
+        </div>
+        <div class="entry-right">
+          <div class="entry-amount">${fmt(e.amount)}</div>
+          <span class="who-badge ${e.who}">${e.who.charAt(0).toUpperCase()+e.who.slice(1)}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+  initSwipe();
+}
+
+// ─── SWIPE TO DELETE ─────────────────────────────────────────────────────────
+function initSwipe() {
+  document.querySelectorAll('.swipe-wrapper').forEach(wrapper => {
+    const card = wrapper.querySelector('.entry-card');
+    let startX = 0, currentX = 0, swiping = false;
+
+    card.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      swiping = true;
+    }, {passive: true});
+
+    card.addEventListener('touchmove', e => {
+      if (!swiping) return;
+      currentX = e.touches[0].clientX - startX;
+      if (currentX < 0) {
+        wrapper.classList.add('swiping');
+        card.style.transition = 'none';
+        card.style.transform = `translateX(${Math.max(currentX, -72)}px)`;
+      }
+    }, {passive: true});
+
+    card.addEventListener('touchend', () => {
+      swiping = false;
+      card.style.transition = 'transform 0.2s ease';
+      if (currentX < -50) {
+        card.style.transform = 'translateX(-72px)';
+        wrapper.classList.add('swiped');
+        const id = wrapper.dataset.id;
+        setTimeout(() => {
+          if (confirm('Delete this entry?')) {
+            deleteDoc(doc(db, 'entries', id)).catch(() => {});
+          } else {
+            card.style.transform = '';
+            wrapper.classList.remove('swiped');
+            wrapper.classList.remove('swiping');
+          }
+        }, 150);
+      } else {
+        card.style.transform = '';
+        wrapper.classList.remove('swiped');
+        wrapper.classList.remove('swiping');
+      }
+      currentX = 0;
+    });
+  });
+}
+
+// ─── REACTIONS ────────────────────────────────────────────────────────────────
+window.openReactionPicker=(id,btn)=>{
+  reactionTargetId=id;
+  const picker=document.getElementById('reactionPicker');
+  picker.innerHTML=REACTION_EMOJIS.map(e=>
+    `<button class="reaction-pick-btn" onclick="pickReaction('${e}')">${e}</button>`
+  ).join('');
+  const rect=btn.getBoundingClientRect();
+  picker.style.display='flex';
+  picker.style.top=(rect.top+window.scrollY-picker.offsetHeight-8)+'px';
+  picker.style.left=Math.min(rect.left,window.innerWidth-230)+'px';
+  setTimeout(()=>document.addEventListener('click',closePicker,{once:true}),10);
+};
+function closePicker(){document.getElementById('reactionPicker').style.display='none'; reactionTargetId=null;}
+window.pickReaction=async(emoji)=>{
+  if(!reactionTargetId)return;
+  closePicker();
+  const entry=entries.find(e=>e._id===reactionTargetId); if(!entry) return;
+  const reactions={...(entry.reactions||{})};
+  reactions[emoji]=(reactions[emoji]||0)+1;
+  try{await updateDoc(doc(db,'entries',reactionTargetId),{reactions});}catch(e){}
+};
+window.toggleReaction=async(id,emoji)=>{
+  const entry=entries.find(e=>e._id===id); if(!entry) return;
+  const reactions={...(entry.reactions||{})};
+  if(reactions[emoji]>1) reactions[emoji]--;
+  else delete reactions[emoji];
+  try{await updateDoc(doc(db,'entries',id),{reactions});}catch(e){}
+};
+
+// ─── WEEKLY BREAKDOWN ─────────────────────────────────────────────────────────
+function renderWeekly(){
+  const me=monthEntries();
+  const firstDay=new Date(currentYear,currentMonth,1);
+  const weeks=[]; let weekStart=new Date(firstDay);
+  while(weekStart.getMonth()===currentMonth){
+    const weekEnd=new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
+    const label=`W${weeks.length+1} ${weekStart.getDate()}–${Math.min(weekEnd.getDate(),new Date(currentYear,currentMonth+1,0).getDate())}`;
+    const total=me.filter(e=>{
+      const d=new Date(e.date+'T00:00:00');
+      return d>=weekStart&&d<=weekEnd;
+    }).reduce((s,e)=>s+e.amount,0);
+    weeks.push({label,total});
+    weekStart=new Date(weekEnd); weekStart.setDate(weekStart.getDate()+1);
+    if(weeks.length>5)break;
+  }
+  const maxW=Math.max(...weeks.map(w=>w.total),0.01);
+  const peakIdx=weeks.reduce((pi,w,i,arr)=>w.total>arr[pi].total?i:pi,0);
+  document.getElementById('weeklyTitle').textContent=`Weekly Breakdown — ${MONTHS[currentMonth]}`;
+  document.getElementById('weekRows').innerHTML=weeks.map((w,i)=>`
+    <div class="week-row${i===peakIdx&&w.total>0?' peak':''}">
+      <div class="week-label">${w.label}${i===peakIdx&&w.total>0?' 🔥':''}</div>
+      <div class="week-track"><div class="week-fill" style="width:${w.total>0?(w.total/maxW*100).toFixed(1):0}%;background:${PIE_COLORS[i%PIE_COLORS.length]};"></div></div>
+      <div class="week-val">${w.total>0?fmt(w.total):'—'}</div>
+    </div>`).join('');
+}
+
+// ─── CHARTS ───────────────────────────────────────────────────────────────────
+window.setChartPerson=(person,btn)=>{
+  chartPerson=person;
+  document.querySelectorAll('.person-pill').forEach(b=>b.className='person-pill');
+  btn.className='person-pill active-'+person;
+  renderChart();
+};
+
+window.renderChart=()=>{
+  const period=document.getElementById('periodSelect').value;
+  const mmCard=document.getElementById('multimonthCard'), whoCard=document.getElementById('whoChartCard');
+  if(period==='mtd'){
+    mmCard.style.display='none'; whoCard.style.display='block';
+    renderPersonTagChart(filterByPerson(monthEntries()),'Spend by Person — This Month');
+    renderPieChart(filterByPerson(monthEntries())); renderMonthYearChart(6);
+  } else if(period==='ytd'){
+    mmCard.style.display='none'; whoCard.style.display='block';
+    renderPersonTagChart(filterByPerson(ytdEntries()),'Spend by Person — Year to Date');
+    renderPieChart(filterByPerson(ytdEntries())); renderMonthYearChart(12);
+  } else if(period==='m2m'){
+    mmCard.style.display='block'; whoCard.style.display='block';
+    document.getElementById('multimonthTitle').textContent='Month vs Month (Last 6 months)';
+    renderPersonTagChart(filterByPerson(monthEntries()),'Spend by Person — This Month');
+    renderPieChart(filterByPerson(monthEntries())); renderMonthYearChart(6); renderMultiMonth(6);
+  } else if(period==='yoy'){
+    mmCard.style.display='block'; whoCard.style.display='block';
+    document.getElementById('multimonthTitle').textContent='Year over Year';
+    renderPersonTagChart(filterByPerson(ytdEntries()),'Spend by Person — YTD');
+    renderPieChart(filterByPerson(ytdEntries())); renderMonthYearChart(12); renderYoY();
+  }
+};
+
+function renderPersonTagChart(data,title){
+  document.getElementById('barChartTitle').textContent=title;
+  const people=chartPerson==='all'
+    ?[{k:'rishi',label:'Rishi'},{k:'shruti',label:'Shruti'},{k:'shared',label:'Shared'}]
+    :[{k:chartPerson,label:chartPerson.charAt(0).toUpperCase()+chartPerson.slice(1)}];
+  const tagSet=[...new Set(data.map(e=>e.cat))];
+  const tagColorMap={};
+  tagSet.forEach((t,i)=>{tagColorMap[t]=PIE_COLORS[i%PIE_COLORS.length];});
+  const personData=people.map(p=>{
+    const pe=data.filter(e=>e.who===p.k);
+    const byTag={};
+    tagSet.forEach(t=>{byTag[t]=pe.filter(e=>e.cat===t).reduce((s,e)=>s+e.amount,0);});
+    return {label:p.label,byTag,total:pe.reduce((s,e)=>s+e.amount,0)};
+  });
+  const maxTotal=Math.max(...personData.map(p=>p.total),0.01);
+  const BAR_H=130;
+  document.getElementById('yAxisTop').textContent=fmtShort(maxTotal);
+  document.getElementById('yAxisMid').textContent=fmtShort(maxTotal/2);
+  const vbar=document.getElementById('vbarWrap');
+  if(!data.length){vbar.innerHTML='<div style="color:var(--muted);font-size:.8rem;padding:20px 0 0 28px;">No data</div>';document.getElementById('tagLegend').innerHTML='';return;}
+  vbar.innerHTML=personData.map(p=>{
+    const segs=tagSet.filter(t=>p.byTag[t]>0).map(t=>{
+      const h=(p.byTag[t]/maxTotal)*BAR_H;
+      return `<div style="width:100%;height:${h.toFixed(1)}px;background:${tagColorMap[t]};flex-shrink:0;"></div>`;
+    }).reverse().join('');
+    return `<div class="vbar-col">
+      <div class="vbar-val">${fmtShort(p.total)}</div>
+      <div style="width:100%;height:${BAR_H}px;display:flex;align-items:flex-end;">
+        <div style="width:100%;display:flex;flex-direction:column;border-radius:6px 6px 0 0;overflow:hidden;">${segs}</div>
+      </div>
+      <div style="font-size:0.7rem;font-weight:600;color:var(--text);text-align:center;">${p.label}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('tagLegend').innerHTML=tagSet.map(t=>{
+    const tag=tagById(t);
+    return `<div style="display:flex;align-items:center;gap:4px;font-size:0.68rem;color:var(--text);">
+      <div style="width:8px;height:8px;border-radius:2px;background:${tagColorMap[t]};flex-shrink:0;"></div>
+      <span>${tag.icon} ${tag.label}</span></div>`;
+  }).join('');
+}
+
+function renderPieChart(data){
+  const cats={};
+  data.forEach(e=>{cats[e.cat]=(cats[e.cat]||0)+e.amount;});
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const total=sorted.reduce((s,c)=>s+c[1],0)||0.01;
+  const pie=document.getElementById('pieSvg'), legend=document.getElementById('pieLegend');
+  if(!sorted.length){pie.innerHTML='<text x="50" y="55" text-anchor="middle" font-size="10" fill="#888">No data</text>';legend.innerHTML='';return;}
+  let sa=-Math.PI/2, slices='';
+  sorted.forEach(([cat,amt],i)=>{
+    const sl=(amt/total)*2*Math.PI, ea=sa+sl;
+    const x1=50+45*Math.cos(sa),y1=50+45*Math.sin(sa),x2=50+45*Math.cos(ea),y2=50+45*Math.sin(ea);
+    const col=PIE_COLORS[i%PIE_COLORS.length];
+    slices+=sorted.length===1?`<circle cx="50" cy="50" r="45" fill="${col}"/>`
+      :`<path d="M50,50 L${x1},${y1} A45,45 0 ${sl>Math.PI?1:0},1 ${x2},${y2} Z" fill="${col}" opacity="0.92"/>`;
+    sa=ea;
+  });
+  pie.innerHTML=slices+`<circle cx="50" cy="50" r="22" fill="${darkMode?'#1f2937':'white'}"/>`;
+  legend.innerHTML=sorted.map(([cat,amt],i)=>{
+    const tag=tagById(cat);
+    return `<div class="pie-legend-item"><div class="pie-dot" style="background:${PIE_COLORS[i%PIE_COLORS.length]}"></div><div class="pie-legend-label">${tag.icon} ${tag.label}</div><div class="pie-legend-pct">${((amt/total)*100).toFixed(1)}%</div></div>`;
+  }).join('');
+}
+
+function renderMonthYearChart(count){
+  const months=[];
+  for(let i=count-1;i>=0;i--){let m=currentMonth-i,y=currentYear;while(m<0){m+=12;y--;}months.push({m,y,label:SHORT_MONTHS[m]+"'"+ String(y).slice(2)});}
+  const totals=months.map(({m,y})=>filterByPerson(monthEntries(m,y)).reduce((s,e)=>s+e.amount,0));
+  const maxAmt=Math.max(...totals,0.01), BAR_H=90;
+  document.getElementById('whoChartBars').innerHTML=`<div style="display:flex;align-items:flex-end;gap:8px;height:${BAR_H+30}px;overflow-x:auto;scrollbar-width:none;">
+    ${months.map(({label},i)=>{
+      const h=Math.max((totals[i]/maxAmt)*BAR_H,totals[i]>0?3:0);
+      const isCur=months[i].m===currentMonth&&months[i].y===currentYear;
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:36px;">
+        <div style="font-size:0.58rem;font-weight:700;color:var(--text);">${totals[i]>0?fmtShort(totals[i]):''}</div>
+        <div style="width:100%;height:${h.toFixed(1)}px;background:${isCur?'var(--accent)':'#94a3b8'};border-radius:5px 5px 0 0;"></div>
+        <div style="font-size:0.6rem;color:${isCur?'var(--accent)':'var(--muted)'};font-weight:${isCur?700:400};text-align:center;white-space:nowrap;">${label}</div>
+      </div>`;
+    }).join('')}</div>`;
+}
+
+function renderMultiMonth(count){
+  const months=[];
+  for(let i=count-1;i>=0;i--){let m=currentMonth-i,y=currentYear;while(m<0){m+=12;y--;}months.push({m,y,label:SHORT_MONTHS[m]+"'"+ String(y).slice(2)});}
+  const whoC={rishi:'var(--rishi)',shruti:'var(--shruti)',shared:'var(--shared)'};
+  const allAmts=months.map(({m,y})=>filterByPerson(monthEntries(m,y)).reduce((s,e)=>s+e.amount,0));
+  const maxAmt=Math.max(...allAmts,0.01), BAR_H=100;
+  document.getElementById('mmBarsWrap').innerHTML=months.map(({m,y,label},i)=>{
+    const md=filterByPerson(monthEntries(m,y));
+    let bars='';
+    if(chartPerson==='all'){
+      ['rishi','shruti','shared'].forEach(k=>{
+        const a=md.filter(e=>e.who===k).reduce((s,e)=>s+e.amount,0);
+        bars+=`<div class="mm-bar" style="height:${(a/maxAmt*BAR_H).toFixed(1)}px;background:${whoC[k]}"></div>`;
+      });
+    } else {
+      const a=md.reduce((s,e)=>s+e.amount,0);
+      bars=`<div class="mm-bar" style="height:${(a/maxAmt*BAR_H).toFixed(1)}px;background:${whoC[chartPerson]||'var(--accent)'}"></div>`;
+    }
+    return `<div class="mm-col"><div class="mm-bar-group">${bars}</div><div class="mm-col-label">${label}</div></div>`;
+  }).join('');
+  document.getElementById('mmLegend').innerHTML=chartPerson==='all'?`
+    <div class="mm-leg-item"><div class="mm-leg-dot" style="background:var(--rishi)"></div>Rishi</div>
+    <div class="mm-leg-item"><div class="mm-leg-dot" style="background:var(--shruti)"></div>Shruti</div>
+    <div class="mm-leg-item"><div class="mm-leg-dot" style="background:var(--shared)"></div>Shared</div>`:'';
+}
+
+function renderYoY(){
+  const years=[currentYear-1,currentYear];
+  const amts=years.map(y=>filterByPerson(ytdEntries(y)).reduce((s,e)=>s+e.amount,0));
+  const maxAmt=Math.max(...amts,0.01), BAR_H=100;
+  const colors=['#94a3b8','var(--accent)'];
+  document.getElementById('mmBarsWrap').innerHTML=years.map((y,i)=>`
+    <div class="mm-col" style="flex:0 0 80px;max-width:100px;">
+      <div class="mm-bar-group" style="justify-content:center;">
+        <div class="mm-bar" style="height:${(amts[i]/maxAmt*BAR_H).toFixed(1)}px;background:${colors[i]};flex:0 0 50px;border-radius:6px 6px 0 0;"></div>
+      </div>
+      <div class="mm-col-label" style="font-size:0.75rem;font-weight:700;">${y}<br><span style="font-weight:400;">${fmt(amts[i])}</span></div>
+    </div>`).join('');
+  document.getElementById('mmLegend').innerHTML=`
+    <div class="mm-leg-item"><div class="mm-leg-dot" style="background:#94a3b8"></div>${currentYear-1} (YTD)</div>
+    <div class="mm-leg-item"><div class="mm-leg-dot" style="background:var(--accent)"></div>${currentYear} (YTD)</div>`;
+}
+
+function renderCalendar(){
+  const firstDay=new Date(currentYear,currentMonth,1).getDay();
+  const daysInMonth=new Date(currentYear,currentMonth+1,0).getDate();
+  const today=new Date(); const entryDays={};
+  monthEntries().forEach(e=>{entryDays[new Date(e.date+'T00:00:00').getDate()]=true;});
+  let cells='';
+  for(let i=0;i<firstDay;i++) cells+='<div class="cal-cell other"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const it=d===today.getDate()&&currentMonth===today.getMonth()&&currentYear===today.getFullYear();
+    cells+=`<div class="cal-cell${it?' today':''}${entryDays[d]?' has-dot':''}">${d}</div>`;
+  }
+  document.getElementById('calCells').innerHTML=cells;
+}
+
+// ─── FILTERS & TABS ───────────────────────────────────────────────────────────
+window.filterCat=(cat,btn)=>{
+  activeCategory=cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderEntries();
+};
+window.switchTab=(tab,btn)=>{
+  document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active'); btn.classList.add('active');
+  if(tab==='chart') renderChart();
+  if(tab==='calendar') renderCalendar();
+  if(tab==='weekly') renderWeekly();
+};
+
+// ─── WHO SELECT ───────────────────────────────────────────────────────────────
+window.selectWho=who=>{
+  selectedWho=who;
+  ['Shared','Rishi','Shruti'].forEach(w=>document.getElementById('opt'+w).className='who-opt');
+  document.getElementById('opt'+who.charAt(0).toUpperCase()+who.slice(1)).className='who-opt sel-'+who;
+};
+
+// ─── TAG PICKER ───────────────────────────────────────────────────────────────
+function renderTagPicker(selId){
+  selectedTagId=selId||allTags()[0].id;
+  document.getElementById('tagPicker').innerHTML=allTags().map(t=>
+    `<button class="tag-opt${selectedTagId===t.id?' selected':''}" onclick="window.__selectTag('${t.id}')">${t.icon} ${t.label}</button>`
+  ).join('')+`<button class="tag-opt add-new" onclick="openNewTag()">＋ New</button>`;
+}
+window.__selectTag=id=>{
+  selectedTagId=id;
+  document.querySelectorAll('.tag-opt').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.tag-opt').forEach(b=>{if(b.onclick&&b.onclick.toString().includes(`'${id}'`))b.classList.add('selected');});
+};
+
+// ─── ADD / EDIT MODALS ────────────────────────────────────────────────────────
+function openAddModal(){
+  editingId=null;
+  document.getElementById('modalTitle').textContent='Add Entry';
+  document.getElementById('modeBadge').textContent='NEW';
+  document.getElementById('modeBadge').className='mode-badge adding';
+  document.getElementById('submitBtn').textContent='Add Entry';
+  document.getElementById('submitBtn').className='btn-submit';
+  document.getElementById('editBtnRow').style.display='none';
+  document.getElementById('cancelBtn').style.display='block';
+  document.getElementById('fDesc').value='';
+  document.getElementById('fAmount').value='';
+  document.getElementById('fNote').value='';
+  document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
+  selectWho('shared'); renderTagPicker(allTags()[0].id);
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('fDesc').focus(),300);
+}
+window.__editEntry=id=>{
+  const entry=entries.find(e=>e._id===id); if(!entry) return;
+  editingId=id;
+  document.getElementById('modalTitle').textContent='Edit Entry';
+  document.getElementById('modeBadge').textContent='EDITING';
+  document.getElementById('modeBadge').className='mode-badge editing';
+  document.getElementById('submitBtn').textContent='Save Changes';
+  document.getElementById('submitBtn').className='btn-submit editing';
+  document.getElementById('editBtnRow').style.display='grid';
+  document.getElementById('cancelBtn').style.display='none';
+  document.getElementById('fDesc').value=entry.desc;
+  document.getElementById('fAmount').value=entry.amount;
+  document.getElementById('fDate').value=entry.date;
+  document.getElementById('fNote').value=entry.note||'';
+  selectWho(entry.who); renderTagPicker(entry.cat);
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('fDesc').focus(),300);
+};
+window.closeModal=()=>{document.getElementById('overlay').classList.remove('open'); editingId=null;};
+
+async function submitEntry(){
+  const desc=document.getElementById('fDesc').value.trim();
+  const amount=parseFloat(document.getElementById('fAmount').value);
+  const date=document.getElementById('fDate').value;
+  const note=document.getElementById('fNote').value.trim();
+  if(!desc){document.getElementById('fDesc').focus();return;}
+  if(!amount||amount<=0){document.getElementById('fAmount').focus();return;}
+  if(!date) return;
+  setSyncStatus('saving','Saving…');
+  const btn=document.getElementById('submitBtn'); btn.disabled=true;
+  const orig=btn.textContent; btn.textContent='Saving…';
+  try{
+    if(editingId) await updateDoc(doc(db,'entries',editingId),{desc,amount,date,who:selectedWho,cat:selectedTagId,note});
+    else await addDoc(entriesCol,{desc,amount,date,who:selectedWho,cat:selectedTagId,note,createdAt:serverTimestamp()});
+    closeModal();
+  }catch(e){setSyncStatus('error','Save failed');}
+  finally{btn.disabled=false;btn.textContent=orig;}
+}
+async function deleteEntry(){
+  if(!editingId||!confirm('Delete this entry?')) return;
+  setSyncStatus('saving','Deleting…');
+  try{await deleteDoc(doc(db,'entries',editingId));closeModal();}
+  catch(e){setSyncStatus('error','Delete failed');}
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────────────────────
+window.openSettings=()=>{
+  document.getElementById('budgetInput').value=budget||'';
+  const t=document.getElementById('darkToggle');
+  t.className='toggle-track'+(darkMode?' on':'');
+  document.getElementById('darkLabel').textContent=darkMode?'On':'Off';
+  // Color picker
+  document.getElementById('colorPicker').innerHTML=THEME_COLORS.map(c=>`
+    <div onclick="window.__pickTheme('${c.value}')" title="${c.name}" style="width:32px;height:32px;border-radius:50%;background:${c.value};cursor:pointer;border:3px solid ${themeColor===c.value?'#fff':'transparent'};box-shadow:${themeColor===c.value?'0 0 0 2px '+c.value+',0 2px 8px rgba(0,0,0,0.2)':'0 1px 4px rgba(0,0,0,0.15)'};transition:all 0.15s;"></div>`).join('');
+  renderRecurringList();
+  renderQuickAddSettings();
+  renderManageTags();
+  document.getElementById('settingsOverlay').classList.add('open');
+};
+
+window.__pickTheme=color=>{
+  themeColor=color; applyTheme(color);
+  document.getElementById('colorPicker').innerHTML=THEME_COLORS.map(c=>`
+    <div onclick="window.__pickTheme('${c.value}')" title="${c.name}" style="width:32px;height:32px;border-radius:50%;background:${c.value};cursor:pointer;border:3px solid ${themeColor===c.value?'#fff':'transparent'};box-shadow:${themeColor===c.value?'0 0 0 2px '+c.value+',0 2px 8px rgba(0,0,0,0.2)':'0 1px 4px rgba(0,0,0,0.15)'};transition:all 0.15s;"></div>`).join('');
+};
+window.closeSettings=()=>document.getElementById('settingsOverlay').classList.remove('open');
+function renderManageTags(){
+  document.getElementById('manageTagsList').innerHTML=[
+    ...DEFAULT_TAGS.map(t=>`<span style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:0.8rem;color:var(--text);">${t.icon} ${t.label}</span>`),
+    ...customTags.map(t=>`<span style="display:flex;align-items:center;gap:4px;padding:5px 10px;background:var(--accent-light);border:1px solid var(--border);border-radius:20px;font-size:0.8rem;color:var(--text);">${t.icon} ${t.label} <button onclick="window.__deleteTag('${t.id}')" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:0.75rem;">✕</button></span>`)
+  ].join('');
+}
+window.__deleteTag=async id=>{customTags=customTags.filter(t=>t.id!==id);renderManageTags();renderCatRow();await saveSettingsToFirebase();};
+window.saveSettings=async()=>{
+  budget=parseFloat(document.getElementById('budgetInput').value)||0;
+  await saveSettingsToFirebase(); closeSettings(); render(); renderQuickAddRow();
+};
+
+// ─── NEW TAG ──────────────────────────────────────────────────────────────────
+window.openNewTag=()=>{
+  selectedIcon='📌';
+  document.getElementById('newTagName').value='';
+  document.getElementById('iconGrid').innerHTML=AVAILABLE_ICONS.map(ic=>
+    `<div class="icon-opt${ic===selectedIcon?' selected':''}" onclick="window.__pickIcon('${ic}')">${ic}</div>`
+  ).join('');
+  document.getElementById('newTagOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('newTagName').focus(),300);
+};
+window.__pickIcon=ic=>{
+  selectedIcon=ic;
+  document.querySelectorAll('.icon-opt').forEach(el=>el.classList.remove('selected'));
+  document.querySelectorAll('.icon-opt').forEach(el=>{if(el.textContent===ic)el.classList.add('selected');});
+};
+window.closeNewTag=()=>document.getElementById('newTagOverlay').classList.remove('open');
+window.saveNewTag=async()=>{
+  const name=document.getElementById('newTagName').value.trim();
+  if(!name){document.getElementById('newTagName').focus();return;}
+  customTags.push({id:'custom_'+Date.now(),label:name,icon:selectedIcon});
+  await saveSettingsToFirebase(); closeNewTag(); renderCatRow();
+  if(document.getElementById('settingsOverlay').classList.contains('open')) renderManageTags();
+};
+
+// ─── RECURRING BILLS ──────────────────────────────────────────────────────────
+let recurringBills = [
+  {id:'rb_rent',   label:'Rent',        icon:'🏠', amount:0, cat:'bills', who:'shared', enabled:true},
+  {id:'rb_elec',   label:'Electricity', icon:'⚡', amount:0, cat:'bills', who:'shared', enabled:true},
+  {id:'rb_inet',   label:'Internet',    icon:'📶', amount:0, cat:'bills', who:'shared', enabled:true},
+  {id:'rb_phone',  label:'Phone',       icon:'📱', amount:0, cat:'bills', who:'shared', enabled:true},
+];
+
+function renderRecurringList() {
+  const list = document.getElementById('recurringList');
+  if (!list) return;
+  list.innerHTML = recurringBills.map((bill, i) => `
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:10px;padding:8px 10px;">
+      <span style="font-size:1.2rem;">${bill.icon}</span>
+      <span style="flex:1;font-size:0.85rem;font-weight:600;">${bill.label}</span>
+      <input data-ridx="${i}" type="number" value="${bill.amount||''}" placeholder="$0"
+        style="width:80px;border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:0.85rem;font-family:inherit;background:var(--card);color:var(--text);text-align:right;"
+        min="0" step="0.01"/>
+      <div onclick="window.__toggleRecurring(${i})" style="cursor:pointer;font-size:1.3rem;user-select:none;">${bill.enabled?'✅':'⬜'}</div>
+    </div>`).join('');
+  list.querySelectorAll('input[data-ridx]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      recurringBills[+inp.dataset.ridx].amount = parseFloat(inp.value)||0;
+    });
+  });
+}
+
+window.__toggleRecurring = i => {
+  recurringBills[i].enabled = !recurringBills[i].enabled;
+  renderRecurringList();
+};
+
+async function autoAddRecurringBills() {
+  const today = new Date();
+  if (today.getDate() !== 1) return; // only run on the 1st
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd = '01';
+  const yyyy = today.getFullYear();
+  const dateStr = `${yyyy}-${mm}-${dd}`;
+  const lastKey = `lastRecurring_${yyyy}_${mm}`;
+
+  // Check if already added this month (stored in settings)
+  const snap = await getDoc(settingsDoc);
+  if (snap.exists() && snap.data()[lastKey]) return; // already done
+
+  const toAdd = recurringBills.filter(b => b.enabled && b.amount > 0);
+  if (!toAdd.length) return;
+
+  for (const bill of toAdd) {
+    await addDoc(entriesCol, {
+      desc: bill.label,
+      amount: bill.amount,
+      cat: bill.cat,
+      who: bill.who,
+      date: dateStr,
+      note: '🔁 Auto-added',
+      ts: serverTimestamp(),
+      createdAt: serverTimestamp()
+    });
+  }
+  // Mark as done for this month
+  await setDoc(settingsDoc, { [lastKey]: true }, { merge: true });
+  setSyncStatus('synced', `✅ ${toAdd.length} recurring bill${toAdd.length>1?'s':''} added for ${MONTHS[today.getMonth()]}`);
+  setTimeout(()=>setSyncStatus('synced','All synced ✓'),3000);
+}
+
+// ─── QUICK ADD ────────────────────────────────────────────────────────────────
+let quickItems = [
+  {id:'qa_elec', label:'Electricity', icon:'⚡', amount:0, cat:'bills', who:'shared'},
+  {id:'qa_rent', label:'Rent',        icon:'🏠', amount:0, cat:'bills', who:'shared'},
+  {id:'qa_wifi', label:'WiFi',        icon:'📶', amount:0, cat:'bills', who:'shared'},
+];
+
+function renderQuickAddRow() {
+  const row = document.getElementById('quickAddRow');
+  if (!row) return;
+  row.innerHTML = quickItems.map(item =>
+    `<button class="quick-add-chip" data-qid="${item.id}">
+      <span class="chip-icon">${item.icon}</span>
+      <span>${item.label}</span>
+      ${item.amount > 0 ? `<span class="chip-amt">${fmt(item.amount)}</span>` : ''}
+    </button>`
+  ).join('') + `<button class="qa-edit-btn" id="qaEditBtn">✏️ Edit</button>`;
+
+  row.querySelectorAll('.quick-add-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = quickItems.find(q => q.id === btn.dataset.qid);
+      if (item) openQuickEntry(item);
+    });
+  });
+  document.getElementById('qaEditBtn').addEventListener('click', openSettings);
+}
+
+function openQuickEntry(item) {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = item.label;
+  document.getElementById('modeBadge').textContent = '⚡ QUICK';
+  document.getElementById('modeBadge').className = 'mode-badge adding';
+  document.getElementById('submitBtn').textContent = `Add ${item.label}`;
+  document.getElementById('submitBtn').className = 'btn-submit';
+  document.getElementById('editBtnRow').style.display = 'none';
+  document.getElementById('cancelBtn').style.display = 'block';
+  document.getElementById('fDesc').value = item.label;
+  document.getElementById('fAmount').value = item.amount > 0 ? item.amount : '';
+  document.getElementById('fNote').value = '';
+  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+  selectWho(item.who || 'shared');
+  renderTagPicker(item.cat || 'bills');
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(() => {
+    const amtEl = document.getElementById('fAmount');
+    if (!item.amount) amtEl.focus(); else amtEl.select();
+  }, 300);
+}
+
+function renderQuickAddSettings() {
+  const list = document.getElementById('quickAddList');
+  if (!list) return;
+  list.innerHTML = quickItems.map((item, i) =>
+    `<div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:10px;padding:8px 10px;">
+      <span style="font-size:1.1rem;">${item.icon}</span>
+      <input data-field="label" data-idx="${i}" value="${item.label}" style="flex:1;border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:0.82rem;font-family:inherit;background:var(--card);color:var(--text);"/>
+      <input data-field="amount" data-idx="${i}" type="number" value="${item.amount||''}" placeholder="$amt" style="width:72px;border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:0.82rem;font-family:inherit;background:var(--card);color:var(--text);" min="0" step="0.01"/>
+      <button data-delidx="${i}" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:1rem;padding:2px 6px;">✕</button>
+    </div>`
+  ).join('');
+  list.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const idx = +inp.dataset.idx, field = inp.dataset.field;
+      if (field==='label')  quickItems[idx].label  = inp.value.trim();
+      if (field==='amount') quickItems[idx].amount = parseFloat(inp.value)||0;
+    });
+  });
+  list.querySelectorAll('[data-delidx]').forEach(btn => {
+    btn.addEventListener('click', () => { quickItems.splice(+btn.dataset.delidx,1); renderQuickAddSettings(); });
+  });
+}
+
+function addQuickItem() {
+  quickItems.push({id:'qa_'+Date.now(), label:'New Bill', icon:'🧾', amount:0, cat:'bills', who:'shared'});
+  renderQuickAddSettings();
+}
+
+// ─── COIN FLIP ────────────────────────────────────────────────────────────────
+const HEADS_VERDICTS = ['Buy it! 🛍️','Treat yourself! 🎁','Go for it! 🚀','You deserve it! ✨','The universe says YES 🙌'];
+const TAILS_VERDICTS = ["Don't do it 🫣","Save the money 💰","Walk away... 🚶","Your wallet says NO 😬","Not today! 🙅"];
+
+document.getElementById('coinFabBtn').addEventListener('click', () => {
+  // reset coin
+  const inner = document.getElementById('coinInner');
+  inner.style.animation = 'none';
+  inner.style.transform = 'rotateY(0deg)';
+  document.getElementById('coinResult').textContent = '—';
+  document.getElementById('coinVerdict').textContent = 'Tap below to let fate decide';
+  document.getElementById('coinTossBtn').disabled = false;
+  document.getElementById('coinOverlay').classList.add('open');
+});
+
+document.getElementById('coinTossBtn').addEventListener('click', () => {
+  const btn = document.getElementById('coinTossBtn');
+  const inner = document.getElementById('coinInner');
+  const result = document.getElementById('coinResult');
+  const verdict = document.getElementById('coinVerdict');
+
+  btn.disabled = true;
+  result.textContent = '…';
+  verdict.textContent = '';
+
+  const isHeads = Math.random() < 0.5;
+  // heads = 0deg final (front face), tails = 180deg final (back face)
+  const extraSpins = 1440 + (Math.floor(Math.random()*3)*360);
+  const endDeg = extraSpins + (isHeads ? 0 : 180);
+  inner.style.setProperty('--coin-end', endDeg + 'deg');
+  inner.style.animation = 'none';
+  void inner.offsetWidth; // reflow
+  inner.style.animation = 'coinSpin 1.2s cubic-bezier(0.4,0,0.2,1) forwards';
+
+  setTimeout(() => {
+    if (isHeads) {
+      result.textContent = '✅ HEADS — BUY IT!';
+      result.style.color = '#16a34a';
+      verdict.textContent = HEADS_VERDICTS[Math.floor(Math.random()*HEADS_VERDICTS.length)];
+    } else {
+      result.textContent = '❌ TAILS — SKIP IT!';
+      result.style.color = '#dc2626';
+      verdict.textContent = TAILS_VERDICTS[Math.floor(Math.random()*TAILS_VERDICTS.length)];
+    }
+    btn.disabled = false;
+    btn.textContent = '🔄 Toss Again';
+  }, 1300);
+});
+
+document.getElementById('coinOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+// ─── WIRE UP ──────────────────────────────────────────────────────────────────
+document.getElementById('fabBtn').addEventListener('click', openAddModal);
+document.getElementById('submitBtn').addEventListener('click', submitEntry);
+document.getElementById('deleteBtn').addEventListener('click', deleteEntry);
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+document.getElementById('addQuickItemBtn').addEventListener('click', addQuickItem);
+
+['overlay','settingsOverlay','newTagOverlay'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) { if(e.target===this) this.classList.remove('open'); });
+});
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape') ['overlay','settingsOverlay','newTagOverlay'].forEach(id => document.getElementById(id).classList.remove('open'));
+});
+</script>
+
+</body>
+</html>
