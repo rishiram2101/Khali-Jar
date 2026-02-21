@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -695,7 +696,6 @@ function setSyncStatus(state,msg) {
 
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
 async function loadSettings() {
-  showDebug('Loading settings...');
   try {
     const snap=await getDoc(settingsDoc);
     if(snap.exists()){
@@ -728,55 +728,21 @@ window.toggleDark = ()=>{
 };
 
 // ─── LIVE LISTENER ────────────────────────────────────────────────────────────
-function showDebug(msg) {
-  let el = document.getElementById('debugPanel');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'debugPanel';
-    el.style.cssText = 'position:fixed;bottom:100px;left:10px;right:10px;background:#1e1e1e;color:#0f0;font-family:monospace;font-size:0.7rem;padding:10px;border-radius:10px;z-index:9999;max-height:200px;overflow-y:auto;';
-    document.body.appendChild(el);
-  }
-  el.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
-  el.scrollTop = el.scrollHeight;
-}
-
-showDebug('App starting...');
-showDebug('Firebase config projectId: ' + firebaseConfig.projectId);
-
-try {
-  showDebug('Setting up Firestore listener...');
-  const q = query(entriesCol);
-  onSnapshot(q,
-    snap => {
-      showDebug('✅ Got ' + snap.docs.length + ' entries from Firebase');
-      entries = snap.docs.map(d => ({_id:d.id,...d.data()}));
-      entries.sort((a,b) => {
-        const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt.seconds*1000) : 0;
-        const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt.seconds*1000) : 0;
-        return tb - ta;
-      });
-      try {
-        showDebug('Calling render()...');
-        render();
-        showDebug('render() completed ✅');
-        setSyncStatus('synced','✓ Live — Firebase');
-      } catch(renderErr) {
-        showDebug('❌ render() CRASHED: ' + renderErr.message);
-        showDebug('Stack: ' + renderErr.stack.split('\n')[1]);
-        setSyncStatus('error','Render error');
-      }
-    },
-    err => {
-      showDebug('❌ Snapshot error: ' + err.code + ' — ' + err.message);
-      setSyncStatus('error', err.code);
-    }
-  );
-  showDebug('Listener attached, waiting for data...');
-} catch(e) {
-  showDebug('❌ CRASH: ' + e.message);
-}
-
-loadSettings().then(()=>showDebug('Settings loaded'));
+const q = query(entriesCol);
+onSnapshot(q,
+  snap => {
+    entries = snap.docs.map(d => ({_id:d.id,...d.data()}));
+    entries.sort((a,b) => {
+      const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt.seconds*1000) : 0;
+      const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt.seconds*1000) : 0;
+      return tb - ta;
+    });
+    render();
+    setSyncStatus('synced','✓ Live — Firebase');
+  },
+  err => { setSyncStatus('error','Sync error — '+err.code); }
+);
+loadSettings();
 
 // ─── MONTH NAV ────────────────────────────────────────────────────────────────
 window.changeMonth=dir=>{
