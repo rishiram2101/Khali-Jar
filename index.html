@@ -694,6 +694,7 @@ function setSyncStatus(state,msg) {
 
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
 async function loadSettings() {
+  showDebug('Loading settings...');
   try {
     const snap=await getDoc(settingsDoc);
     if(snap.exists()){
@@ -726,21 +727,47 @@ window.toggleDark = ()=>{
 };
 
 // ─── LIVE LISTENER ────────────────────────────────────────────────────────────
-const q=query(entriesCol);
-onSnapshot(q,
-  snap=>{
-    entries=snap.docs.map(d=>({_id:d.id,...d.data()}));
-    // sort client-side — newest first, handles missing createdAt gracefully
-    entries.sort((a,b)=>{
-      const ta=a.createdAt?.seconds||0;
-      const tb=b.createdAt?.seconds||0;
-      return tb-ta;
-    });
-    render(); setSyncStatus('synced','✓ Live — Firebase');
-  },
-  err=>{console.error('Snapshot error:',err); setSyncStatus('error','Sync error — '+err.code);}
-);
-loadSettings();
+function showDebug(msg) {
+  let el = document.getElementById('debugPanel');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'debugPanel';
+    el.style.cssText = 'position:fixed;bottom:100px;left:10px;right:10px;background:#1e1e1e;color:#0f0;font-family:monospace;font-size:0.7rem;padding:10px;border-radius:10px;z-index:9999;max-height:200px;overflow-y:auto;';
+    document.body.appendChild(el);
+  }
+  el.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+showDebug('App starting...');
+showDebug('Firebase config projectId: ' + firebaseConfig.projectId);
+
+try {
+  showDebug('Setting up Firestore listener...');
+  const q = query(entriesCol);
+  onSnapshot(q,
+    snap => {
+      showDebug('✅ Got ' + snap.docs.length + ' entries from Firebase');
+      entries = snap.docs.map(d => ({_id:d.id,...d.data()}));
+      entries.sort((a,b) => {
+        const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt.seconds*1000) : 0;
+        const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt.seconds*1000) : 0;
+        return tb - ta;
+      });
+      render();
+      setSyncStatus('synced','✓ Live — Firebase');
+    },
+    err => {
+      showDebug('❌ Snapshot error: ' + err.code + ' — ' + err.message);
+      setSyncStatus('error', err.code);
+    }
+  );
+  showDebug('Listener attached, waiting for data...');
+} catch(e) {
+  showDebug('❌ CRASH: ' + e.message);
+}
+
+loadSettings().then(()=>showDebug('Settings loaded'));
 
 // ─── MONTH NAV ────────────────────────────────────────────────────────────────
 window.changeMonth=dir=>{
@@ -888,10 +915,11 @@ function renderEntries(){
   }
   const sorted=[...filtered].sort((a,b)=>new Date(b.date)-new Date(a.date));
   list.innerHTML = '<div style="display:flex;flex-direction:column;gap:9px;">'+sorted.map(e=>{
-    const d=new Date(e.date+'T00:00:00');
+    const d=new Date((e.date||'2000-01-01')+'T00:00:00');
     const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     const tag=tagById(e.cat);
     const reactions=e.reactions||{};
+    const who=e.who||'shared';
     const reactionHTML=Object.entries(reactions).map(([emoji,count])=>
       `<button class="reaction-btn" onclick="event.stopPropagation();toggleReaction('${e._id}','${emoji}')">${emoji} <span class="reaction-count">${count}</span></button>`
     ).join('');
@@ -900,7 +928,7 @@ function renderEntries(){
       <div class="entry-card" onclick="window.__editEntry('${e._id}')">
         <div class="entry-emoji">${tag.icon}</div>
         <div class="entry-info">
-          <div class="entry-desc">${e.desc.replace(/</g,'&lt;')}</div>
+          <div class="entry-desc">${(e.desc||'').replace(/</g,'&lt;')}</div>
           <div class="entry-meta">
             <span>${ds}</span>
             <span class="entry-tag-pill">${tag.label}</span>
@@ -913,8 +941,8 @@ function renderEntries(){
           </div>
         </div>
         <div class="entry-right">
-          <div class="entry-amount">${fmt(e.amount)}</div>
-          <span class="who-badge ${e.who}">${e.who.charAt(0).toUpperCase()+e.who.slice(1)}</span>
+          <div class="entry-amount">${fmt(e.amount||0)}</div>
+          <span class="who-badge ${who}">${who.charAt(0).toUpperCase()+who.slice(1)}</span>
         </div>
       </div>
     </div>`;
@@ -1263,7 +1291,7 @@ window.__editEntry=id=>{
   document.getElementById('fAmount').value=entry.amount;
   document.getElementById('fDate').value=entry.date;
   document.getElementById('fNote').value=entry.note||'';
-  selectWho(entry.who); renderTagPicker(entry.cat);
+  selectWho(entry.who||'shared'); renderTagPicker(entry.cat||allTags()[0].id);
   document.getElementById('overlay').classList.add('open');
   setTimeout(()=>document.getElementById('fDesc').focus(),300);
 };
