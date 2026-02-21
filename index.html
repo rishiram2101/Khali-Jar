@@ -682,7 +682,8 @@ window.toggleDemo = () => {
   }
   render();
 };
-function tagById(id) { return allTags().find(t=>t.id===id)||{label:id,icon:'📌'}; }
+function allTags() { return [...DEFAULT_TAGS, ...customTags]; }
+function tagById(id) { return allTags().find(t=>t.id===id)||{label:id||'Other',icon:'📌'}; }
 
 // ─── SYNC STATUS ──────────────────────────────────────────────────────────────
 function setSyncStatus(state,msg) {
