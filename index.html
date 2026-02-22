@@ -715,21 +715,24 @@ window.toggleDark = ()=>{
 };
 
 // ─── LIVE LISTENER ────────────────────────────────────────────────────────────
-const q = query(entriesCol);
-onSnapshot(q,
-  snap => {
-    entries = snap.docs.map(d => ({_id:d.id,...d.data()}));
-    entries.sort((a,b) => {
-      const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt.seconds*1000) : 0;
-      const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt.seconds*1000) : 0;
-      return tb - ta;
-    });
-    render();
-    setSyncStatus('synced','✓ Live — Firebase');
-  },
-  err => { setSyncStatus('error','Sync error — '+err.code); }
-);
-loadSettings();
+// ─── LIVE LISTENER — start AFTER settings loaded so custom tags are ready ──────
+loadSettings().then(() => {
+  const q = query(entriesCol);
+  onSnapshot(q,
+    snap => {
+      entries = snap.docs.map(d => ({_id:d.id,...d.data()}));
+      entries.sort((a,b) => {
+        const ta = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt.seconds*1000) : 0;
+        const tb = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt.seconds*1000) : 0;
+        return tb - ta;
+      });
+      render();
+      setSyncStatus('synced','✓ Live — Firebase');
+      migrateBrokenCats();
+    },
+    err => { setSyncStatus('error','Sync error — '+err.code); }
+  );
+});
 
 // ─── MONTH NAV ────────────────────────────────────────────────────────────────
 window.changeMonth=dir=>{
@@ -738,6 +741,26 @@ window.changeMonth=dir=>{
   if(currentMonth<0){currentMonth=11;currentYear--;}
   render();
 };
+
+// ─── MIGRATE BROKEN CAT IDs ───────────────────────────────────────────────────
+let migrationDone = false;
+async function migrateBrokenCats() {
+  if (migrationDone) return;
+  migrationDone = true;
+  const broken = entries.filter(e => {
+    const cats = e.cats || [e.cat];
+    return cats.some(c => c && c.startsWith('custom_') && !allTags().find(t=>t.id===c));
+  });
+  if (!broken.length) return;
+  for (const e of broken) {
+    const fixedCat = (e.cats||[e.cat]).map(c =>
+      (c && c.startsWith('custom_') && !allTags().find(t=>t.id===c)) ? 'other' : c
+    );
+    try {
+      await updateDoc(doc(db,'entries',e._id), {cat: fixedCat[0], cats: fixedCat});
+    } catch(_) {}
+  }
+}
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function monthEntries(m,y){
