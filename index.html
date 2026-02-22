@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -78,19 +77,18 @@ header { background: var(--theme); color: white; padding: 18px 18px 14px; positi
 .trend-down { color: var(--trend-down); font-weight: 700; }
 
 /* TABS */
-.tabs { display: flex; gap: 6px; padding: 12px 14px 0; overflow-x: auto; scrollbar-width: none; }
-.tabs::-webkit-scrollbar { display: none; }
-.tab { padding: 7px 14px; border-radius: 30px; border: 1.5px solid var(--border); background: none; cursor: pointer; font-size: 0.8rem; font-family: inherit; color: var(--muted); transition: all 0.2s; font-weight: 500; white-space: nowrap; }
-.tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+.tabs { display: flex; gap: 0; padding: 12px 14px 0; background: transparent; }
+.tab { flex: 1; padding: 9px 4px; border-radius: 0; border: none; border-bottom: 2.5px solid var(--border); background: none; cursor: pointer; font-size: 0.78rem; font-family: inherit; color: var(--muted); transition: all 0.2s; font-weight: 500; white-space: nowrap; text-align: center; }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
 
 /* MAIN */
 .main { padding: 12px 14px 100px; }
 
 /* CAT ROW */
-.cat-row { display: flex; gap: 7px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 2px; scrollbar-width: none; }
+.cat-row { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 2px; scrollbar-width: none; }
 .cat-row::-webkit-scrollbar { display: none; }
-.cat-btn { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--card); cursor: pointer; font-size: 0.75rem; font-family: inherit; white-space: nowrap; transition: all 0.15s; font-weight: 500; color: var(--text); }
-.cat-btn.active { background: var(--gold); border-color: var(--gold); color: white; }
+.cat-btn { padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--card); cursor: pointer; font-size: 0.68rem; font-family: inherit; white-space: nowrap; transition: all 0.15s; font-weight: 500; color: var(--muted); }
+.cat-btn.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 700; }
 .cat-btn.add-tag { border-style: dashed; color: var(--muted); }
 
 /* VIEW PANELS */
@@ -118,20 +116,6 @@ header { background: var(--theme); color: white; padding: 18px 18px 14px; positi
 .entry-amount { font-size: 1rem; font-weight: 800; }
 .who-badge { display: inline-block; font-size: 0.63rem; padding: 2px 8px; border-radius: 20px; color: white; margin-top: 3px; font-weight: 600; }
 .who-badge.rishi { background: var(--rishi); } .who-badge.shruti { background: var(--shruti); } .who-badge.shared { background: var(--shared); }
-
-/* REACTIONS */
-.reactions-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-.reaction-btn { background: var(--bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 3px 8px; font-size: 0.78rem; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 3px; }
-.reaction-btn:hover { border-color: var(--accent); transform: scale(1.1); }
-.reaction-btn.mine { background: var(--accent-light); border-color: var(--accent); }
-.reaction-count { font-size: 0.68rem; font-weight: 700; color: var(--muted); }
-.add-reaction-btn { background: none; border: 1.5px dashed var(--border); border-radius: 20px; padding: 3px 8px; font-size: 0.78rem; cursor: pointer; color: var(--muted); transition: all 0.15s; }
-.add-reaction-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-/* REACTION PICKER */
-.reaction-picker { position: fixed; z-index: 300; background: var(--card); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; max-width: 220px; }
-.reaction-pick-btn { font-size: 1.4rem; cursor: pointer; padding: 4px; border-radius: 8px; transition: transform 0.15s; border: none; background: none; }
-.reaction-pick-btn:hover { transform: scale(1.3); background: var(--bg); }
 
 /* WEEKLY BREAKDOWN */
 .weekly-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
@@ -569,9 +553,6 @@ header { background: var(--theme); color: white; padding: 18px 18px 14px; positi
   </div>
 </div>
 
-<!-- REACTION PICKER (floating) -->
-<div class="reaction-picker" id="reactionPicker" style="display:none;"></div>
-
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp }    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -624,11 +605,10 @@ let currentMonth = new Date().getMonth();
 let currentYear  = new Date().getFullYear();
 let activeCategory = 'all';
 let selectedWho    = 'shared';
-let selectedTagId  = 'dining';
+let selectedTagIds = ['dining']; // multi-select
 let editingId      = null;
 let selectedIcon   = '📌';
 let chartPerson    = 'all';
-let reactionTargetId = null;
 
 let demoMode = false;
 let realEntries = []; // store real entries while in demo mode
@@ -684,7 +664,14 @@ window.toggleDemo = () => {
   render();
 };
 function allTags() { return [...DEFAULT_TAGS, ...customTags]; }
-function tagById(id) { return allTags().find(t=>t.id===id)||{label:id||'Other',icon:'📌'}; }
+function tagById(id) { 
+  if(!id) return {label:'Other',icon:'📌'};
+  const found = allTags().find(t=>t.id===id);
+  if(found) return found;
+  // Legacy: if id looks like custom_timestamp, show generic label
+  if(id.startsWith('custom_')) return {label:'Other',icon:'📌'};
+  return {label:id, icon:'📌'};
+}
 
 // ─── SYNC STATUS ──────────────────────────────────────────────────────────────
 function setSyncStatus(state,msg) {
@@ -818,17 +805,18 @@ function renderInsights(me){
   const strip=document.getElementById('insightsStrip');
   const insights=[];
 
-  // 1. SPENDING TRENDS — compare each tag this month vs last month (skip recurring bills)
   const SKIP_TRENDS = ['rent','electricity','internet','phone','wifi'];
   let prevM=currentMonth-1, prevY=currentYear;
   if(prevM<0){prevM=11;prevY--;}
   const prev=monthEntries(prevM,prevY);
 
-  const allTagIds=[...new Set([...me,...prev].map(e=>e.cat))];
+  // Get all tag IDs from entries (support multi-cat)
+  const getEntryCats = e => e.cats || [e.cat];
+  const allTagIds=[...new Set([...me,...prev].flatMap(e=>getEntryCats(e)))];
   allTagIds.forEach(cat=>{
     if(SKIP_TRENDS.includes(tagById(cat).label.toLowerCase())) return;
-    const curAmt=me.filter(e=>e.cat===cat).reduce((s,e)=>s+e.amount,0);
-    const preAmt=prev.filter(e=>e.cat===cat).reduce((s,e)=>s+e.amount,0);
+    const curAmt=me.filter(e=>getEntryCats(e).includes(cat)).reduce((s,e)=>s+e.amount,0);
+    const preAmt=prev.filter(e=>getEntryCats(e).includes(cat)).reduce((s,e)=>s+e.amount,0);
     if(preAmt>0&&curAmt>0){
       const pct=Math.round(((curAmt-preAmt)/preAmt)*100);
       const tag=tagById(cat);
@@ -839,18 +827,21 @@ function renderInsights(me){
     }
   });
 
-  // 2. TAG OF THE MONTH (skip rent tag)
+  // 2. TAG OF THE MONTH (skip recurring bills)
+  const SKIP_TOP = ['rent','electricity','internet','phone','wifi'];
   const tagTotals={};
   me.forEach(e=>{
-    if(tagById(e.cat).label.toLowerCase()==='rent') return;
-    tagTotals[e.cat]=(tagTotals[e.cat]||0)+e.amount;
+    getEntryCats(e).forEach(cat=>{
+      if(SKIP_TOP.includes(tagById(cat).label.toLowerCase())) return;
+      tagTotals[cat]=(tagTotals[cat]||0)+e.amount;
+    });
   });
   const topTagEntries=Object.entries(tagTotals).sort((a,b)=>b[1]-a[1]);
   if(topTagEntries.length>0){
     const [topCat,topAmt]=topTagEntries[0];
     const topTag=tagById(topCat);
-    const totalExRent=me.filter(e=>tagById(e.cat).label.toLowerCase()!=='rent').reduce((s,e)=>s+e.amount,0);
-    const pct=totalExRent>0?Math.round((topAmt/totalExRent)*100):0;
+    const totalExSkip=me.filter(e=>!SKIP_TOP.includes(tagById((e.cats||[e.cat])[0]).label.toLowerCase())).reduce((s,e)=>s+e.amount,0);
+    const pct=totalExSkip>0?Math.round((topAmt/totalExSkip)*100):0;
     insights.push({icon:topTag.icon, html:`<strong>${topTag.label}</strong> is your top category this month — <span class="trend-up">${pct}%</span> of spend at <strong>${fmt(topAmt)}</strong> 👀`});
   }
 
@@ -882,7 +873,10 @@ function renderCatRow(){
 // ─── ENTRIES ─────────────────────────────────────────────────────────────────
 function renderEntries(){
   const me=monthEntries();
-  const filtered=activeCategory==='all'?me:me.filter(e=>e.cat===activeCategory);
+  const filtered=activeCategory==='all'?me:me.filter(e=>{
+    const cats = e.cats || [e.cat];
+    return cats.includes(activeCategory);
+  });
   const list=document.getElementById('entriesList');
   if(!filtered.length){
     list.innerHTML='<div class="empty-state"><div class="e-icon">🫙</div><p>Nothing here yet.<br>Tap ＋ to add an expense!</p></div>';
@@ -892,28 +886,25 @@ function renderEntries(){
   list.innerHTML = '<div style="display:flex;flex-direction:column;gap:9px;">'+sorted.map(e=>{
     const d=new Date((e.date||'2000-01-01')+'T00:00:00');
     const ds=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-    const tag=tagById(e.cat);
-    const reactions=e.reactions||{};
+    const cats = e.cats || [e.cat];
+    const primaryTag = tagById(cats[0]);
+    const tagPills = cats.map(c=>{
+      const t=tagById(c);
+      return `<span class="entry-tag-pill">${t.icon} ${t.label}</span>`;
+    }).join('');
     const who=e.who||'shared';
-    const reactionHTML=Object.entries(reactions).map(([emoji,count])=>
-      `<button class="reaction-btn" onclick="event.stopPropagation();toggleReaction('${e._id}','${emoji}')">${emoji} <span class="reaction-count">${count}</span></button>`
-    ).join('');
     return `<div class="swipe-wrapper" data-id="${e._id}">
       <div class="swipe-delete-bg">🗑️</div>
       <div class="entry-card" onclick="window.__editEntry('${e._id}')">
-        <div class="entry-emoji">${tag.icon}</div>
+        <div class="entry-emoji">${primaryTag.icon}</div>
         <div class="entry-info">
           <div class="entry-desc">${(e.desc||'').replace(/</g,'&lt;')}</div>
           <div class="entry-meta">
             <span>${ds}</span>
-            <span class="entry-tag-pill">${tag.label}</span>
+            ${tagPills}
             <span class="edit-hint">tap to edit</span>
           </div>
           ${e.note?`<div style="font-size:0.72rem;color:var(--muted);margin-top:3px;font-style:italic;">💬 ${e.note.replace(/</g,'&lt;')}</div>`:''}
-          <div class="reactions-row">
-            ${reactionHTML}
-            <button class="add-reaction-btn" onclick="event.stopPropagation();openReactionPicker('${e._id}',this)">＋ 😄</button>
-          </div>
         </div>
         <div class="entry-right">
           <div class="entry-amount">${fmt(e.amount||0)}</div>
@@ -971,36 +962,6 @@ function initSwipe() {
     });
   });
 }
-
-// ─── REACTIONS ────────────────────────────────────────────────────────────────
-window.openReactionPicker=(id,btn)=>{
-  reactionTargetId=id;
-  const picker=document.getElementById('reactionPicker');
-  picker.innerHTML=REACTION_EMOJIS.map(e=>
-    `<button class="reaction-pick-btn" onclick="pickReaction('${e}')">${e}</button>`
-  ).join('');
-  const rect=btn.getBoundingClientRect();
-  picker.style.display='flex';
-  picker.style.top=(rect.top+window.scrollY-picker.offsetHeight-8)+'px';
-  picker.style.left=Math.min(rect.left,window.innerWidth-230)+'px';
-  setTimeout(()=>document.addEventListener('click',closePicker,{once:true}),10);
-};
-function closePicker(){document.getElementById('reactionPicker').style.display='none'; reactionTargetId=null;}
-window.pickReaction=async(emoji)=>{
-  if(!reactionTargetId)return;
-  closePicker();
-  const entry=entries.find(e=>e._id===reactionTargetId); if(!entry) return;
-  const reactions={...(entry.reactions||{})};
-  reactions[emoji]=(reactions[emoji]||0)+1;
-  try{await updateDoc(doc(db,'entries',reactionTargetId),{reactions});}catch(e){}
-};
-window.toggleReaction=async(id,emoji)=>{
-  const entry=entries.find(e=>e._id===id); if(!entry) return;
-  const reactions={...(entry.reactions||{})};
-  if(reactions[emoji]>1) reactions[emoji]--;
-  else delete reactions[emoji];
-  try{await updateDoc(doc(db,'entries',id),{reactions});}catch(e){}
-};
 
 // ─── WEEKLY BREAKDOWN ─────────────────────────────────────────────────────────
 function renderWeekly(){
@@ -1221,17 +1182,24 @@ window.selectWho=who=>{
   document.getElementById('opt'+who.charAt(0).toUpperCase()+who.slice(1)).className='who-opt sel-'+who;
 };
 
-// ─── TAG PICKER ───────────────────────────────────────────────────────────────
-function renderTagPicker(selId){
-  selectedTagId=selId||allTags()[0].id;
-  document.getElementById('tagPicker').innerHTML=allTags().map(t=>
-    `<button class="tag-opt${selectedTagId===t.id?' selected':''}" onclick="window.__selectTag('${t.id}')">${t.icon} ${t.label}</button>`
-  ).join('')+`<button class="tag-opt add-new" onclick="openNewTag()">＋ New</button>`;
+// ─── TAG PICKER (multi-select) ────────────────────────────────────────────────
+function renderTagPicker(selIds){
+  selectedTagIds = Array.isArray(selIds) ? selIds : [selIds||allTags()[0].id];
+  document.getElementById('tagPicker').innerHTML=
+    allTags().map(t=>
+      `<button class="tag-opt${selectedTagIds.includes(t.id)?' selected':''}" onclick="window.__selectTag('${t.id}')">${t.icon} ${t.label}</button>`
+    ).join('')+`<button class="tag-opt add-new" onclick="openNewTag()">＋ New</button>`;
 }
 window.__selectTag=id=>{
-  selectedTagId=id;
-  document.querySelectorAll('.tag-opt').forEach(b=>b.classList.remove('selected'));
-  document.querySelectorAll('.tag-opt').forEach(b=>{if(b.onclick&&b.onclick.toString().includes(`'${id}'`))b.classList.add('selected');});
+  if(selectedTagIds.includes(id)){
+    if(selectedTagIds.length>1) selectedTagIds=selectedTagIds.filter(x=>x!==id); // deselect if >1 selected
+  } else {
+    selectedTagIds=[...selectedTagIds, id];
+  }
+  document.querySelectorAll('.tag-opt:not(.add-new)').forEach(b=>{
+    const bid=b.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    if(bid) b.classList.toggle('selected', selectedTagIds.includes(bid));
+  });
 };
 
 // ─── ADD / EDIT MODALS ────────────────────────────────────────────────────────
@@ -1248,7 +1216,7 @@ function openAddModal(){
   document.getElementById('fAmount').value='';
   document.getElementById('fNote').value='';
   document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
-  selectWho('shared'); renderTagPicker(allTags()[0].id);
+  selectWho('shared'); renderTagPicker([allTags()[0].id]);
   document.getElementById('overlay').classList.add('open');
   setTimeout(()=>document.getElementById('fDesc').focus(),300);
 }
@@ -1266,7 +1234,9 @@ window.__editEntry=id=>{
   document.getElementById('fAmount').value=entry.amount;
   document.getElementById('fDate').value=entry.date;
   document.getElementById('fNote').value=entry.note||'';
-  selectWho(entry.who||'shared'); renderTagPicker(entry.cat||allTags()[0].id);
+  selectWho(entry.who||'shared'); 
+  const cats = entry.cats ? entry.cats : (entry.cat ? [entry.cat] : [allTags()[0].id]);
+  renderTagPicker(cats);
   document.getElementById('overlay').classList.add('open');
   setTimeout(()=>document.getElementById('fDesc').focus(),300);
 };
@@ -1284,8 +1254,10 @@ async function submitEntry(){
   const btn=document.getElementById('submitBtn'); btn.disabled=true;
   const orig=btn.textContent; btn.textContent='Saving…';
   try{
-    if(editingId) await updateDoc(doc(db,'entries',editingId),{desc,amount,date,who:selectedWho,cat:selectedTagId,note});
-    else await addDoc(entriesCol,{desc,amount,date,who:selectedWho,cat:selectedTagId,note,createdAt:serverTimestamp()});
+    const cat = selectedTagIds[0]; // primary tag for backward compat
+    const cats = selectedTagIds;
+    if(editingId) await updateDoc(doc(db,'entries',editingId),{desc,amount,date,who:selectedWho,cat,cats,note});
+    else await addDoc(entriesCol,{desc,amount,date,who:selectedWho,cat,cats,note,createdAt:serverTimestamp()});
     closeModal();
   }catch(e){setSyncStatus('error','Save failed');}
   finally{btn.disabled=false;btn.textContent=orig;}
@@ -1334,17 +1306,22 @@ window.saveSettings=async()=>{
 window.openNewTag=()=>{
   selectedIcon='📌';
   document.getElementById('newTagName').value='';
-  document.getElementById('iconGrid').innerHTML=AVAILABLE_ICONS.map(ic=>
-    `<div class="icon-opt${ic===selectedIcon?' selected':''}" onclick="window.__pickIcon('${ic}')">${ic}</div>`
+  const grid = document.getElementById('iconGrid');
+  grid.innerHTML = AVAILABLE_ICONS.map((ic,i)=>
+    `<div class="icon-opt${ic===selectedIcon?' selected':''}" data-idx="${i}">${ic}</div>`
   ).join('');
+  grid.querySelectorAll('.icon-opt').forEach(el => {
+    el.addEventListener('click', () => {
+      const ic = AVAILABLE_ICONS[+el.dataset.idx];
+      selectedIcon = ic;
+      grid.querySelectorAll('.icon-opt').forEach(x=>x.classList.remove('selected'));
+      el.classList.add('selected');
+    });
+  });
   document.getElementById('newTagOverlay').classList.add('open');
   setTimeout(()=>document.getElementById('newTagName').focus(),300);
 };
-window.__pickIcon=ic=>{
-  selectedIcon=ic;
-  document.querySelectorAll('.icon-opt').forEach(el=>el.classList.remove('selected'));
-  document.querySelectorAll('.icon-opt').forEach(el=>{if(el.textContent===ic)el.classList.add('selected');});
-};
+window.__pickIcon=ic=>{}; // no longer used but keep to avoid errors
 window.closeNewTag=()=>document.getElementById('newTagOverlay').classList.remove('open');
 window.saveNewTag=async()=>{
   const name=document.getElementById('newTagName').value.trim();
